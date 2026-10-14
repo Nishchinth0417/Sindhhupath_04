@@ -640,104 +640,145 @@
 
       <!-- ════════════ TAB: SCHEDULE ════════════ -->
       <section id="tab-schedule" class="tab-content">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
           <div>
-            <h2 class="font-sub text-xl text-deep-sea uppercase tracking-wide">Weekly Class Schedule</h2>
-            <p id="sched-week-subtitle" class="text-xs sm:text-sm text-slate mt-0.5">Maritime Cadet Timetable · Fall 2026</p>
+            <h2 class="font-sub text-xl sm:text-2xl text-deep-sea uppercase tracking-wide">Schedule &amp; Timetable</h2>
+            <p id="sched-live-date-header" class="text-xs sm:text-sm text-slate mt-0.5">Maritime Cadet Academy Agenda · Batch Alpha</p>
           </div>
-          <div class="flex items-center gap-2 bg-white p-1 rounded-xl border border-gray-200 self-start sm:self-auto shadow-sm">
-            <button id="btn-sched-dayview" onclick="toggleScheduleView('day')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-deep-sea text-white transition-all flex items-center gap-1 min-h-[36px]">
-              <span class="material-symbols-outlined text-sm">view_day</span> Day View
-            </button>
-            <button id="btn-sched-gridview" onclick="toggleScheduleView('grid')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate hover:text-deep-sea transition-all flex items-center gap-1 min-h-[36px]">
-              <span class="material-symbols-outlined text-sm">calendar_view_week</span> Full Grid
+          <div class="flex items-center gap-2">
+            <button onclick="goToCurrentWeek(); goToCurrentMonth();" class="px-3.5 py-2 rounded-xl border border-gold/40 text-deep-sea bg-gold/10 hover:bg-gold hover:text-deep-sea text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm min-h-[38px]">
+              <span class="material-symbols-outlined text-base text-gold">today</span> Jump to Today
             </button>
           </div>
         </div>
 
-        <!-- Day Selector Pill Bar for Mobile/Tablet (Dynamic Today) -->
-        <div id="sched-day-pills" class="flex overflow-x-auto gap-2 mb-4 pb-1 no-scrollbar">
-          <button class="sched-pill filter-pill" data-day="mon" onclick="selectScheduleDay('mon')">Mon</button>
-          <button class="sched-pill filter-pill" data-day="tue" onclick="selectScheduleDay('tue')">Tue</button>
-          <button class="sched-pill filter-pill" data-day="wed" onclick="selectScheduleDay('wed')">Wed</button>
-          <button class="sched-pill filter-pill" data-day="thu" onclick="selectScheduleDay('thu')">Thu</button>
-          <button class="sched-pill filter-pill" data-day="fri" onclick="selectScheduleDay('fri')">Fri</button>
-          <button class="sched-pill filter-pill" data-day="sat" onclick="selectScheduleDay('sat')">Sat</button>
+        <!-- 1. Scheduled Online Classes & Proctored Exams (Synced with Faculty) -->
+        <div class="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 shadow-sm mb-6">
+          <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-teal text-xl">devices</span>
+              <h3 class="font-sub text-base font-bold text-deep-sea uppercase tracking-wide">Scheduled Online Classes &amp; Exams</h3>
+            </div>
+            <div class="flex items-center gap-2">
+              <span id="scheduled-events-count" class="badge bg-teal/10 text-teal border border-teal/30">Loading...</span>
+              <button id="btn-clear-date-filter" onclick="clearDateFilter()" class="hidden text-[11px] font-bold text-red-600 hover:text-red-700 underline flex items-center gap-0.5">
+                <span class="material-symbols-outlined text-sm">clear</span> Clear Filter
+              </button>
+            </div>
+          </div>
+          <div id="scheduled-events-list" class="space-y-3">
+            <!-- Dynamically populated by JS renderScheduledEventsList() -->
+          </div>
         </div>
 
-        <!-- Mobile/Tablet Timeline Cards View -->
-        <div id="schedule-day-container" class="space-y-3 mb-6">
-          <!-- Populated by JS -->
+        <!-- 2. Interactive Cadet Monthly Calendar -->
+        <div class="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 shadow-sm mb-6">
+          <div class="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-gold text-xl">calendar_month</span>
+              <h3 id="cal-month-title" class="font-sub text-lg font-bold text-deep-sea uppercase tracking-wider">October 2026</h3>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button onclick="changeMonth(-1)" class="p-1.5 rounded-lg border border-gray-200 text-slate hover:text-deep-sea hover:border-gold transition-colors" title="Previous Month">
+                <span class="material-symbols-outlined text-base">chevron_left</span>
+              </button>
+              <button onclick="goToCurrentMonth()" class="px-3 py-1 rounded-lg border border-gold/40 bg-gold/10 text-deep-sea text-xs font-bold hover:bg-gold transition-colors">Today</button>
+              <button onclick="changeMonth(1)" class="p-1.5 rounded-lg border border-gray-200 text-slate hover:text-deep-sea hover:border-gold transition-colors" title="Next Month">
+                <span class="material-symbols-outlined text-base">chevron_right</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Days of Week Header -->
+          <div class="grid grid-cols-7 text-center font-sub text-[11px] sm:text-xs font-bold text-slate uppercase tracking-wider mb-2">
+            <div class="py-1 text-red-500">Sun</div>
+            <div class="py-1">Mon</div>
+            <div class="py-1">Tue</div>
+            <div class="py-1">Wed</div>
+            <div class="py-1">Thu</div>
+            <div class="py-1">Fri</div>
+            <div class="py-1">Sat</div>
+          </div>
+
+          <!-- Calendar Grid (Populated by JS) -->
+          <div id="calendar-grid" class="grid grid-cols-7 gap-1 sm:gap-1.5"></div>
+          
+          <div class="flex flex-wrap items-center justify-between text-[11px] text-slate mt-3 pt-2 border-t border-gray-100 gap-2">
+            <div class="flex items-center gap-3">
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-teal"></span> Online Class</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Proctored Exam</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-gold border border-gold"></span> Today</span>
+            </div>
+            <span class="text-slate/80">Tap any date to view scheduled online sessions</span>
+          </div>
         </div>
 
-        <!-- Desktop Full Table Grid View (hidden by default on mobile) -->
-        <div id="schedule-grid-container" class="hidden bg-white rounded-2xl border border-gray-200 overflow-x-auto shadow-sm">
-          <table class="w-full min-w-[700px] text-xs">
-            <thead>
-              <tr class="bg-deep-sea text-white">
-                <th class="p-3 text-left font-sub uppercase tracking-wider w-20">Time</th>
-                <th class="p-3 text-center font-sub uppercase tracking-wider">MON</th>
-                <th class="p-3 text-center font-sub uppercase tracking-wider">TUE</th>
-                <th class="p-3 text-center font-sub uppercase tracking-wider bg-gold/30 text-gold">WED ★</th>
-                <th class="p-3 text-center font-sub uppercase tracking-wider">THU</th>
-                <th class="p-3 text-center font-sub uppercase tracking-wider">FRI</th>
-                <th class="p-3 text-center font-sub uppercase tracking-wider">SAT</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-100">
-              <tr class="divide-x divide-gray-100">
-                <td class="p-2 font-bold text-deep-sea text-center">07:30 AM</td>
-                <td class="p-1.5"><div class="tt-cell class-slot"><p class="font-semibold text-gold">Math</p><p class="text-white/60 text-[10px]">Trigonometry</p></div></td>
-                <td class="p-1.5"><div class="tt-cell class-slot"><p class="font-semibold text-gold">Physics</p><p class="text-white/60 text-[10px]">Mechanics</p></div></td>
-                <td class="p-1.5 bg-gold/5"><div class="tt-cell class-slot today-col"><p class="font-semibold">Math</p><p class="text-[10px] opacity-70">Calculus</p></div></td>
-                <td class="p-1.5"><div class="tt-cell class-slot"><p class="font-semibold text-gold">Physics</p><p class="text-white/60 text-[10px]">Optics</p></div></td>
-                <td class="p-1.5"><div class="tt-cell class-slot"><p class="font-semibold text-gold">Math</p><p class="text-white/60 text-[10px]">Algebra</p></div></td>
-                <td class="p-1.5"><div class="tt-cell"><p class="text-slate text-center">—</p></div></td>
-              </tr>
-              <tr class="divide-x divide-gray-100">
-                <td class="p-2 font-bold text-deep-sea text-center">10:00 AM</td>
-                <td class="p-1.5"><div class="tt-cell class-slot"><p class="font-semibold text-gold">English</p><p class="text-white/60 text-[10px]">Grammar</p></div></td>
-                <td class="p-1.5"><div class="tt-cell class-slot"><p class="font-semibold text-gold">DNS Prep</p><p class="text-white/60 text-[10px]">Ship Stability</p></div></td>
-                <td class="p-1.5 bg-gold/5"><div class="tt-cell class-slot today-col"><p class="font-semibold">Physics</p><p class="text-[10px] opacity-70">Optics</p></div></td>
-                <td class="p-1.5"><div class="tt-cell class-slot"><p class="font-semibold text-gold">English</p><p class="text-white/60 text-[10px]">Comprehension</p></div></td>
-                <td class="p-1.5"><div class="tt-cell class-slot"><p class="font-semibold text-gold">Mock Test</p><p class="text-white/60 text-[10px]">Full Syllabus</p></div></td>
-                <td class="p-1.5"><div class="tt-cell class-slot"><p class="font-semibold text-gold">Revision</p><p class="text-white/60 text-[10px]">All Subjects</p></div></td>
-              </tr>
-              <tr class="divide-x divide-gray-100">
-                <td class="p-2 font-bold text-deep-sea text-center">12:00 PM</td>
-                <td class="p-1.5"><div class="tt-cell"><p class="text-slate text-center">Lunch Break</p></div></td>
-                <td class="p-1.5"><div class="tt-cell"><p class="text-slate text-center">Lunch Break</p></div></td>
-                <td class="p-1.5 bg-gold/5"><div class="tt-cell today-col"><p class="text-deep-sea/60 text-center">Lunch Break</p></div></td>
-                <td class="p-1.5"><div class="tt-cell"><p class="text-slate text-center">Lunch Break</p></div></td>
-                <td class="p-1.5"><div class="tt-cell"><p class="text-slate text-center">Lunch Break</p></div></td>
-                <td class="p-1.5"><div class="tt-cell"><p class="text-slate text-center">Lunch Break</p></div></td>
-              </tr>
-              <tr class="divide-x divide-gray-100">
-                <td class="p-2 font-bold text-deep-sea text-center">02:00 PM</td>
-                <td class="p-1.5"><div class="tt-cell class-slot"><p class="font-semibold text-gold">GK</p><p class="text-white/60 text-[10px]">Maritime Awareness</p></div></td>
-                <td class="p-1.5"><div class="tt-cell class-slot"><p class="font-semibold text-gold">Math</p><p class="text-white/60 text-[10px]">Statistics</p></div></td>
-                <td class="p-1.5 bg-gold/5"><div class="tt-cell class-slot today-col"><p class="font-semibold">English</p><p class="text-[10px] opacity-70">Comprehension</p></div></td>
-                <td class="p-1.5"><div class="tt-cell class-slot"><p class="font-semibold text-gold">DNS Prep</p><p class="text-white/60 text-[10px]">Navigation</p></div></td>
-                <td class="p-1.5"><div class="tt-cell class-slot"><p class="font-semibold text-gold">GK</p><p class="text-white/60 text-[10px]">Current Affairs</p></div></td>
-                <td class="p-1.5"><div class="tt-cell class-slot"><p class="font-semibold text-gold">Mentoring</p><p class="text-white/60 text-[10px]">1-on-1</p></div></td>
-              </tr>
-              <tr class="divide-x divide-gray-100">
-                <td class="p-2 font-bold text-deep-sea text-center">04:30 PM</td>
-                <td class="p-1.5"><div class="tt-cell class-slot"><p class="font-semibold text-gold">Doubt Class</p><p class="text-white/60 text-[10px]">Open Q&A</p></div></td>
-                <td class="p-1.5"><div class="tt-cell"><p class="text-slate text-center">—</p></div></td>
-                <td class="p-1.5 bg-gold/5"><div class="tt-cell class-slot today-col"><p class="font-semibold">GK Maritime</p><p class="text-[10px] opacity-70">Awareness</p></div></td>
-                <td class="p-1.5"><div class="tt-cell class-slot"><p class="font-semibold text-gold">Doubt Class</p><p class="text-white/60 text-[10px]">Physics Focus</p></div></td>
-                <td class="p-1.5"><div class="tt-cell"><p class="text-slate text-center">—</p></div></td>
-                <td class="p-1.5"><div class="tt-cell"><p class="text-slate text-center">—</p></div></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <!-- 3. Weekly Timetable & Daily Agenda -->
+        <div class="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5 shadow-sm mb-6">
+          <!-- Timetable Top Bar: Title, Week Navigator, and View Switcher -->
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4 pb-4 border-b border-gray-100">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-deep-sea text-xl">access_time</span>
+                <h3 class="font-sub text-base font-bold text-deep-sea uppercase tracking-wide">Weekly Timetable</h3>
+              </div>
+              <p id="sched-week-subtitle" class="text-xs text-slate mt-0.5">Week of 12 Oct – 17 Oct 2026</p>
+            </div>
 
-        <div class="mt-4 flex flex-wrap gap-4 text-xs">
-          <div class="flex items-center gap-2"><div class="w-4 h-4 rounded bg-deep-sea"></div><span class="text-slate">Regular Class</span></div>
-          <div class="flex items-center gap-2"><div class="w-4 h-4 rounded bg-gold"></div><span class="text-slate">Today's Classes</span></div>
-          <div class="flex items-center gap-2"><div class="w-4 h-4 rounded bg-gray-100 border"></div><span class="text-slate">Free / Break</span></div>
+            <!-- Week Navigator Controls & View Switcher -->
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="flex items-center bg-canvas p-1 rounded-xl border border-gray-200">
+                <button onclick="changeWeek(-1)" class="p-1.5 rounded-lg text-slate hover:text-deep-sea hover:bg-white transition-all" title="Previous Week">
+                  <span class="material-symbols-outlined text-base">chevron_left</span>
+                </button>
+                <span id="sched-week-nav-label" class="px-2.5 text-xs font-bold text-deep-sea font-sub uppercase">Current Week</span>
+                <button onclick="changeWeek(1)" class="p-1.5 rounded-lg text-slate hover:text-deep-sea hover:bg-white transition-all" title="Next Week">
+                  <span class="material-symbols-outlined text-base">chevron_right</span>
+                </button>
+              </div>
+
+              <!-- Day View / Grid View Switcher -->
+              <div class="flex items-center bg-canvas p-1 rounded-xl border border-gray-200">
+                <button id="btn-sched-dayview" onclick="toggleScheduleView('day')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-deep-sea text-white transition-all flex items-center gap-1 min-h-[36px]">
+                  <span class="material-symbols-outlined text-sm">view_day</span> Day View
+                </button>
+                <button id="btn-sched-gridview" onclick="toggleScheduleView('grid')" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate hover:text-deep-sea transition-all flex items-center gap-1 min-h-[36px]">
+                  <span class="material-symbols-outlined text-sm">calendar_view_week</span> Full Grid
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dynamic Day Selector Pills with Real Dates -->
+          <div id="sched-day-pills" class="flex overflow-x-auto gap-2 mb-4 pb-1 no-scrollbar">
+            <!-- Dynamically populated by JS initScheduleDayPills() -->
+          </div>
+
+          <!-- Day Timeline Cards View -->
+          <div id="schedule-day-container" class="space-y-3">
+            <!-- Dynamically populated by JS renderCadetDaySchedule() -->
+          </div>
+
+          <!-- Full Table Grid View -->
+          <div id="schedule-grid-container" class="hidden overflow-x-auto rounded-xl border border-gray-200">
+            <table class="w-full min-w-[700px] text-xs">
+              <thead id="schedule-grid-head">
+                <!-- Dynamically populated by JS -->
+              </thead>
+              <tbody id="schedule-grid-body" class="divide-y divide-gray-100">
+                <!-- Dynamically populated by JS -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Legend -->
+          <div class="mt-4 flex flex-wrap gap-4 text-xs pt-3 border-t border-gray-100">
+            <div class="flex items-center gap-2"><div class="w-3.5 h-3.5 rounded bg-emerald-500"></div><span class="text-slate">Live Now</span></div>
+            <div class="flex items-center gap-2"><div class="w-3.5 h-3.5 rounded bg-blue-600"></div><span class="text-slate">Next Up</span></div>
+            <div class="flex items-center gap-2"><div class="w-3.5 h-3.5 rounded bg-gold"></div><span class="text-slate">Today's Column</span></div>
+            <div class="flex items-center gap-2"><div class="w-3.5 h-3.5 rounded bg-gray-300"></div><span class="text-slate">Concluded / Past</span></div>
+          </div>
         </div>
       </section>
 
@@ -1662,9 +1703,10 @@ function switchTab(id) {
     renderDashboardTodaySchedule();
   }
   if (id === 'schedule') {
-    initScheduleDayPills();
-    updateScheduleGridToday(getTodaySchedDay());
-    renderMobileSchedule(currentSchedDay);
+    loadScheduleEvents();
+    renderCadetSchedule();
+    renderScheduledEventsList();
+    renderCalendar();
   }
   if (id === 'materials') renderMaterials('all');
   if (id === 'mocktests') renderAvailableTests();
@@ -1680,45 +1722,330 @@ function toast(msg, type='info') {
   }).showToast();
 }
 
-// ── WEEKLY SCHEDULE DATA + MOBILE DAY RENDER ──────────────────
+// ── SCHEDULE EVENTS & ONLINE MEETINGS DATA (SHARED WITH FACULTY PORTAL) ──
+const LS_SCHEDULE = 'fp_schedule_events';
+const DEFAULT_SCHEDULE_EVENTS = [
+  {
+    id: 1,
+    type: 'online',
+    date: '2026-10-15',
+    time: '10:00',
+    batch: 'Batch Alpha (DNS)',
+    subject: 'Celestial Navigation — Sight Reduction & Polaris Live Bridge',
+    link: 'https://meet.google.com/abc-defg-hij',
+    duration: 90
+  },
+  {
+    id: 2,
+    type: 'exam',
+    date: '2026-10-22',
+    time: '14:00',
+    batch: 'Batch Winter (IMU)',
+    subject: 'IMU-CET Proctored CBT Mock Series 06',
+    duration: 180,
+    instructions: 'Total Marks: 200. Negative marking (-0.25) active. CBT Sim Lab 1 or online terminal.'
+  },
+  {
+    id: 3,
+    type: 'online',
+    date: '2026-10-05',
+    time: '14:30',
+    batch: 'Batch Bravo (Pre-Sea)',
+    subject: 'COLREGs Steering & Sailing Rules Masterclass',
+    link: 'https://meet.google.com/xyz-uvwx-rst',
+    duration: 90
+  }
+];
+
+let appScheduleEvents = [];
+function loadScheduleEvents() {
+  try {
+    const saved = localStorage.getItem(LS_SCHEDULE);
+    if (saved) {
+      appScheduleEvents = JSON.parse(saved);
+    } else {
+      appScheduleEvents = [...DEFAULT_SCHEDULE_EVENTS];
+      localStorage.setItem(LS_SCHEDULE, JSON.stringify(appScheduleEvents));
+    }
+  } catch(e) {
+    appScheduleEvents = [...DEFAULT_SCHEDULE_EVENTS];
+  }
+}
+
+// ── CALENDAR LOGIC ──────────────────────────────────────────────
+let currentCalYear = new Date().getFullYear();
+let currentCalMonth = new Date().getMonth();
+let selectedCalDate = null;
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function changeMonth(delta) {
+  currentCalMonth += delta;
+  if (currentCalMonth > 11) { currentCalMonth = 0; currentCalYear++; }
+  if (currentCalMonth < 0)  { currentCalMonth = 11; currentCalYear--; }
+  renderCalendar();
+}
+
+function goToCurrentMonth() {
+  const now = new Date();
+  currentCalYear = now.getFullYear();
+  currentCalMonth = now.getMonth();
+  selectedCalDate = null;
+  const clearBtn = document.getElementById('btn-clear-date-filter');
+  if (clearBtn) clearBtn.classList.add('hidden');
+  renderCalendar();
+  renderScheduledEventsList();
+}
+
+function clearDateFilter() {
+  selectedCalDate = null;
+  const clearBtn = document.getElementById('btn-clear-date-filter');
+  if (clearBtn) clearBtn.classList.add('hidden');
+  renderCalendar();
+  renderScheduledEventsList();
+}
+
+function selectCalendarDate(dateStr) {
+  if (selectedCalDate === dateStr) {
+    clearDateFilter();
+    return;
+  }
+  selectedCalDate = dateStr;
+  const clearBtn = document.getElementById('btn-clear-date-filter');
+  if (clearBtn) clearBtn.classList.remove('hidden');
+  renderCalendar();
+  renderScheduledEventsList(dateStr);
+  
+  // Also sync timetable if the clicked day is a weekday/saturday
+  try {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const clickedDate = new Date(y, m - 1, d);
+    const dayOfWeek = clickedDate.getDay();
+    if (dayOfWeek >= 1 && dayOfWeek <= 6) {
+      const dayKey = DAY_KEYS[dayOfWeek];
+      currentSchedDay = dayKey;
+      renderCadetSchedule();
+    }
+  } catch(e) {}
+}
+
+function renderCalendar() {
+  const titleEl = document.getElementById('cal-month-title');
+  if (titleEl) titleEl.textContent = `${MONTH_NAMES[currentCalMonth]} ${currentCalYear}`;
+
+  const grid = document.getElementById('calendar-grid');
+  if (!grid) return;
+
+  const firstDay = new Date(currentCalYear, currentCalMonth, 1).getDay();
+  const daysInMonth = new Date(currentCalYear, currentCalMonth + 1, 0).getDate();
+  const prevMonthDays = new Date(currentCalYear, currentCalMonth, 0).getDate();
+
+  let html = '';
+
+  // Prev month trailing days
+  for (let i = firstDay - 1; i >= 0; i--) {
+    const dayNum = prevMonthDays - i;
+    html += `<div class="p-1.5 sm:p-2 min-h-[55px] sm:min-h-[75px] rounded-xl bg-gray-50/50 border border-gray-100 opacity-40 text-xs select-none">
+      <span class="font-semibold text-slate">${dayNum}</span>
+    </div>`;
+  }
+
+  // Current month days
+  const todayObj = new Date();
+  for (let day = 1; day <= daysInMonth; day++) {
+    const monthStr = String(currentCalMonth + 1).padStart(2, '0');
+    const dayStr   = String(day).padStart(2, '0');
+    const fullDate = `${currentCalYear}-${monthStr}-${dayStr}`;
+
+    const isToday = (currentCalYear === todayObj.getFullYear() && currentCalMonth === todayObj.getMonth() && day === todayObj.getDate());
+    const isSelected = (selectedCalDate === fullDate);
+    const dayEvents = appScheduleEvents.filter(e => e.date === fullDate);
+
+    let cellClass = isSelected
+      ? 'bg-deep-sea text-white border-2 border-gold shadow-md'
+      : isToday
+      ? 'bg-gold/10 border-2 border-gold shadow-sm'
+      : 'bg-white border-gray-200 hover:border-gold/60 hover:shadow-sm';
+
+    let dayNumClass = isSelected
+      ? 'text-gold font-extrabold'
+      : isToday
+      ? 'text-gold font-bold'
+      : 'text-deep-sea font-bold';
+
+    html += `
+      <div onclick="selectCalendarDate('${fullDate}')"
+        class="p-1.5 sm:p-2 min-h-[55px] sm:min-h-[75px] rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${cellClass}">
+        <div class="flex items-center justify-between">
+          <span class="text-xs ${dayNumClass}">${day}</span>
+          ${isToday && !isSelected ? '<span class="text-[8px] font-sub font-bold text-gold uppercase tracking-tighter">Today</span>' : ''}
+          ${isSelected ? '<span class="material-symbols-outlined text-xs text-gold">check_circle</span>' : ''}
+        </div>
+        <div class="space-y-0.5 mt-1">
+          ${dayEvents.map(ev => {
+            if (ev.type === 'online') {
+              return `<div class="text-[8px] sm:text-[9px] font-semibold px-1 py-0.5 rounded bg-teal text-white truncate" title="${ev.subject}">🌐 ${ev.time}</div>`;
+            } else if (ev.type === 'exam') {
+              return `<div class="text-[8px] sm:text-[9px] font-semibold px-1 py-0.5 rounded bg-amber-500 text-white truncate" title="${ev.subject}">📝 ${ev.time}</div>`;
+            } else {
+              return `<div class="text-[8px] sm:text-[9px] font-semibold px-1 py-0.5 rounded bg-deep-sea text-white truncate" title="${ev.subject}">🏫 ${ev.time}</div>`;
+            }
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  // Next month leading days
+  const totalCells = firstDay + daysInMonth;
+  const remainingCells = (totalCells > 35 ? 42 : 35) - totalCells;
+  for (let d = 1; d <= remainingCells; d++) {
+    html += `<div class="p-1.5 sm:p-2 min-h-[55px] sm:min-h-[75px] rounded-xl bg-gray-50/50 border border-gray-100 opacity-40 text-xs select-none">
+      <span class="font-semibold text-slate">${d}</span>
+    </div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
+function renderScheduledEventsList(filterDate = null) {
+  const container = document.getElementById('scheduled-events-list');
+  const countBadge = document.getElementById('scheduled-events-count');
+  if (!container) return;
+
+  loadScheduleEvents();
+
+  let list = [...appScheduleEvents];
+  if (filterDate) {
+    list = list.filter(e => e.date === filterDate);
+  }
+
+  if (countBadge) {
+    countBadge.textContent = filterDate 
+      ? `${list.length} on ${filterDate}`
+      : `${list.length} Active Events`;
+  }
+
+  if (list.length === 0) {
+    container.innerHTML = `
+      <div class="text-center py-6 text-slate text-xs bg-canvas rounded-xl border border-dashed border-gray-200">
+        <span class="material-symbols-outlined text-3xl text-slate/60 block mb-1">event_available</span>
+        ${filterDate ? `No online classes or exams scheduled for <strong>${filterDate}</strong>.` : 'No upcoming online classes or proctored exams scheduled right now.'}
+      </div>`;
+    return;
+  }
+
+  const sorted = [...list].sort((a,b) => (a.date + a.time).localeCompare(b.date + b.time));
+  const now = new Date();
+
+  container.innerHTML = sorted.map(ev => {
+    const isOnline = ev.type === 'online';
+    const isExam   = ev.type === 'exam';
+
+    const typeBadge = isOnline
+      ? '<span class="badge bg-teal/10 text-teal border border-teal/30">🌐 Online Class</span>'
+      : isExam
+      ? '<span class="badge bg-amber-100 text-amber-700 border border-amber-300">📝 Proctored Exam</span>'
+      : '<span class="badge bg-blue-50 text-blue-700">🏫 Offline Lecture</span>';
+
+    let formattedDate = ev.date;
+    let relativeStr = '';
+    try {
+      const [y, m, d] = ev.date.split('-').map(Number);
+      const evDate = new Date(y, m - 1, d);
+      formattedDate = evDate.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+      
+      const todayMid = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const evMid = new Date(y, m - 1, d);
+      const diffDays = Math.round((evMid - todayMid) / (1000 * 60 * 60 * 24));
+      
+      if (diffDays === 0) relativeStr = 'Today';
+      else if (diffDays === 1) relativeStr = 'Tomorrow';
+      else if (diffDays === -1) relativeStr = 'Yesterday';
+      else if (diffDays > 1) relativeStr = `In ${diffDays} days`;
+      else relativeStr = `${Math.abs(diffDays)} days ago`;
+    } catch(e){}
+
+    return `
+      <div class="p-4 rounded-xl border border-gray-200 bg-white hover:border-gold/40 transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+        <div class="flex-1 min-w-0">
+          <div class="flex flex-wrap items-center gap-2 mb-1.5">
+            ${typeBadge}
+            <span class="badge bg-gray-100 text-gray-700">${ev.batch || 'All Cadets'}</span>
+            <span class="text-xs text-slate font-semibold flex items-center gap-1">
+              <span class="material-symbols-outlined text-sm">calendar_today</span> ${formattedDate} at ${ev.time}
+            </span>
+            ${relativeStr ? `<span class="badge bg-deep-sea/10 text-deep-sea font-bold text-[9px]">${relativeStr}</span>` : ''}
+          </div>
+          <h4 class="text-sm font-bold text-deep-sea leading-snug">${ev.subject}</h4>
+          ${isOnline && ev.link ? `
+            <div class="mt-2 flex items-center gap-2 text-xs text-slate bg-teal/5 p-2 rounded-lg border border-teal/20">
+              <span class="material-symbols-outlined text-teal text-base shrink-0">link</span>
+              <span class="truncate font-mono text-[11px] text-teal select-all">${ev.link}</span>
+            </div>
+          ` : ''}
+          ${isExam && ev.instructions ? `
+            <p class="text-xs text-slate mt-1 italic"><span class="font-semibold">Notice:</span> ${ev.instructions}</p>
+          ` : ''}
+        </div>
+        
+        <div class="flex items-center gap-2 shrink-0 self-end sm:self-center">
+          ${isOnline && ev.link ? `
+            <a href="${ev.link}" target="_blank" rel="noopener noreferrer"
+              class="px-4 py-2 rounded-xl bg-gold hover:bg-gold-light text-deep-sea text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-all min-h-[38px]">
+              <span class="material-symbols-outlined text-base">video_call</span> Join Class
+            </a>
+          ` : ''}
+          ${isExam ? `
+            <button onclick="switchTab('mocktests')"
+              class="px-4 py-2 rounded-xl bg-deep-sea hover:bg-navy-mid text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-all min-h-[38px]">
+              <span class="material-symbols-outlined text-base">quiz</span> Take CBT Test
+            </button>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+// ── WEEKLY TIMETABLE DATA & TIME ENGINE ─────────────────────────
 const WEEKLY_SCHEDULE_DATA = {
   mon: [
-    { time: '07:30 AM', subject: 'Mathematics — Trigonometry', faculty: 'Capt. R. Sharma', room: 'Room 201', badge: 'Regular', color: 'bg-slate/20 text-slate' },
-    { time: '10:00 AM', subject: 'English — Grammar', faculty: 'Ms. Priya Nair', room: 'Room 102', badge: 'Regular', color: 'bg-slate/20 text-slate' },
-    { time: '12:00 PM', subject: 'Lunch Break & Self Study', faculty: '—', room: 'Cafeteria', badge: 'Break', color: 'bg-gray-100 text-gray-600' },
-    { time: '02:00 PM', subject: 'GK — Maritime Awareness', faculty: 'Mr. Vikas Menon', room: 'Online', badge: 'Regular', color: 'bg-slate/20 text-slate' },
-    { time: '04:30 PM', subject: 'Doubt Class — Open Q&A', faculty: 'All Faculty', room: 'Room 201', badge: 'Tutorial', color: 'bg-slate/20 text-slate' },
+    { time: '07:30 AM', subject: 'Mathematics — Trigonometry', faculty: 'Capt. R. Sharma', room: 'Room 201', type: 'class' },
+    { time: '10:00 AM', subject: 'English — Grammar', faculty: 'Ms. Priya Nair', room: 'Room 102', type: 'class' },
+    { time: '12:00 PM', subject: 'Lunch Break & Self Study', faculty: '—', room: 'Cafeteria', type: 'break' },
+    { time: '02:00 PM', subject: 'GK — Maritime Awareness', faculty: 'Mr. Vikas Menon', room: 'Online', type: 'class' },
+    { time: '04:30 PM', subject: 'Doubt Class — Open Q&A', faculty: 'All Faculty', room: 'Room 201', type: 'class' },
   ],
   tue: [
-    { time: '07:30 AM', subject: 'Physics — Mechanics', faculty: 'Dr. Meera Iyer', room: 'Room 201', badge: 'Regular', color: 'bg-slate/20 text-slate' },
-    { time: '10:00 AM', subject: 'DNS Prep — Ship Stability', faculty: 'Capt. Arun Pillai', room: 'Nautical Lab', badge: 'DNS Lab', color: 'bg-slate/20 text-slate' },
-    { time: '12:00 PM', subject: 'Lunch Break', faculty: '—', room: 'Cafeteria', badge: 'Break', color: 'bg-gray-100 text-gray-600' },
-    { time: '02:00 PM', subject: 'Mathematics — Statistics', faculty: 'Capt. R. Sharma', room: 'Room 201', badge: 'Regular', color: 'bg-slate/20 text-slate' },
+    { time: '07:30 AM', subject: 'Physics — Mechanics', faculty: 'Dr. Meera Iyer', room: 'Room 201', type: 'class' },
+    { time: '10:00 AM', subject: 'DNS Prep — Ship Stability', faculty: 'Capt. Arun Pillai', room: 'Nautical Lab', type: 'class' },
+    { time: '12:00 PM', subject: 'Lunch Break', faculty: '—', room: 'Cafeteria', type: 'break' },
+    { time: '02:00 PM', subject: 'Mathematics — Statistics', faculty: 'Capt. R. Sharma', room: 'Room 201', type: 'class' },
   ],
   wed: [
-    { time: '07:30 AM', subject: 'Mathematics — Calculus', faculty: 'Capt. R. Sharma', room: 'Room 201', badge: 'Live Now', color: 'bg-emerald-100 text-emerald-700 font-bold' },
-    { time: '10:00 AM', subject: 'Physics — Optics & Waves', faculty: 'Dr. Meera Iyer', room: 'Online', badge: 'Upcoming', color: 'bg-blue-100 text-blue-700 font-semibold' },
-    { time: '12:00 PM', subject: 'Lunch Break', faculty: '—', room: 'Cafeteria', badge: 'Break', color: 'bg-gray-100 text-gray-600' },
-    { time: '02:00 PM', subject: 'English — Comprehension', faculty: 'Ms. Priya Nair', room: 'Room 102', badge: 'Scheduled', color: 'bg-slate/20 text-slate' },
-    { time: '04:30 PM', subject: 'GK — Maritime Awareness', faculty: 'Mr. Vikas Menon', room: 'Online', badge: 'Scheduled', color: 'bg-slate/20 text-slate' },
+    { time: '07:30 AM', subject: 'Mathematics — Calculus', faculty: 'Capt. R. Sharma', room: 'Room 201', type: 'class' },
+    { time: '10:00 AM', subject: 'Physics — Optics & Waves', faculty: 'Dr. Meera Iyer', room: 'Online', type: 'class' },
+    { time: '12:00 PM', subject: 'Lunch Break', faculty: '—', room: 'Cafeteria', type: 'break' },
+    { time: '02:00 PM', subject: 'English — Comprehension', faculty: 'Ms. Priya Nair', room: 'Room 102', type: 'class' },
+    { time: '04:30 PM', subject: 'GK — Maritime Awareness', faculty: 'Mr. Vikas Menon', room: 'Online', type: 'class' },
   ],
   thu: [
-    { time: '07:30 AM', subject: 'Physics — Optics', faculty: 'Dr. Meera Iyer', room: 'Room 201', badge: 'Scheduled', color: 'bg-slate/20 text-slate' },
-    { time: '10:00 AM', subject: 'English — Comprehension', faculty: 'Ms. Priya Nair', room: 'Room 102', badge: 'Scheduled', color: 'bg-slate/20 text-slate' },
-    { time: '12:00 PM', subject: 'Lunch Break', faculty: '—', room: 'Cafeteria', badge: 'Break', color: 'bg-gray-100 text-gray-600' },
-    { time: '02:00 PM', subject: 'DNS Prep — Navigation', faculty: 'Capt. Arun Pillai', room: 'Nautical Lab', badge: 'Scheduled', color: 'bg-slate/20 text-slate' },
-    { time: '04:30 PM', subject: 'Doubt Class — Physics Focus', faculty: 'Dr. Meera Iyer', room: 'Online', badge: 'Scheduled', color: 'bg-slate/20 text-slate' },
+    { time: '07:30 AM', subject: 'Physics — Optics', faculty: 'Dr. Meera Iyer', room: 'Room 201', type: 'class' },
+    { time: '10:00 AM', subject: 'English — Comprehension', faculty: 'Ms. Priya Nair', room: 'Room 102', type: 'class' },
+    { time: '12:00 PM', subject: 'Lunch Break', faculty: '—', room: 'Cafeteria', type: 'break' },
+    { time: '02:00 PM', subject: 'DNS Prep — Navigation', faculty: 'Capt. Arun Pillai', room: 'Nautical Lab', type: 'class' },
+    { time: '04:30 PM', subject: 'Doubt Class — Physics Focus', faculty: 'Dr. Meera Iyer', room: 'Online', type: 'class' },
   ],
   fri: [
-    { time: '07:30 AM', subject: 'Mathematics — Algebra', faculty: 'Capt. R. Sharma', room: 'Room 201', badge: 'Scheduled', color: 'bg-slate/20 text-slate' },
-    { time: '10:00 AM', subject: 'Mock Test — Full Syllabus', faculty: 'Exam Cell', room: 'Computer Lab 1', badge: 'Test', color: 'bg-purple-100 text-purple-700 font-bold' },
-    { time: '12:00 PM', subject: 'Lunch Break', faculty: '—', room: 'Cafeteria', badge: 'Break', color: 'bg-gray-100 text-gray-600' },
-    { time: '02:00 PM', subject: 'GK — Current Affairs', faculty: 'Mr. Vikas Menon', room: 'Online', badge: 'Scheduled', color: 'bg-slate/20 text-slate' },
+    { time: '07:30 AM', subject: 'Mathematics — Algebra', faculty: 'Capt. R. Sharma', room: 'Room 201', type: 'class' },
+    { time: '10:00 AM', subject: 'Mock Test — Full Syllabus', faculty: 'Exam Cell', room: 'Computer Lab 1', type: 'exam' },
+    { time: '12:00 PM', subject: 'Lunch Break', faculty: '—', room: 'Cafeteria', type: 'break' },
+    { time: '02:00 PM', subject: 'GK — Current Affairs', faculty: 'Mr. Vikas Menon', room: 'Online', type: 'class' },
   ],
   sat: [
-    { time: '10:00 AM', subject: 'Revision — All Subjects', faculty: 'All Faculty', room: 'Main Auditorium', badge: 'Scheduled', color: 'bg-gold/20 text-gold border border-gold/30' },
-    { time: '12:00 PM', subject: 'Lunch Break', faculty: '—', room: 'Cafeteria', badge: 'Break', color: 'bg-gray-100 text-gray-600' },
-    { time: '02:00 PM', subject: '1-on-1 Cadet Mentoring Session', faculty: 'Senior Captains', room: 'Faculty Room', badge: 'Special', color: 'bg-emerald-100 text-emerald-800' },
+    { time: '10:00 AM', subject: 'Revision — All Subjects', faculty: 'All Faculty', room: 'Main Auditorium', type: 'class' },
+    { time: '12:00 PM', subject: 'Lunch Break', faculty: '—', room: 'Cafeteria', type: 'break' },
+    { time: '02:00 PM', subject: '1-on-1 Cadet Mentoring Session', faculty: 'Senior Captains', room: 'Faculty Room', type: 'class' },
   ]
 };
 
@@ -1726,83 +2053,363 @@ const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 const DAY_LABELS = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat' };
 
 function getTodaySchedDay() {
-  const dayIdx = new Date().getDay(); // 0 = Sun, 1 = Mon, ..., 6 = Sat
+  const dayIdx = new Date().getDay();
   return (dayIdx >= 1 && dayIdx <= 6) ? DAY_KEYS[dayIdx] : 'mon';
 }
 
 let currentSchedDay = getTodaySchedDay();
+let currentWeekOffset = 0;
 
-function initScheduleDayPills() {
-  const dayIdx = new Date().getDay();
-  const actualTodayKey = (dayIdx >= 1 && dayIdx <= 6) ? DAY_KEYS[dayIdx] : null;
+function getWeekDates(offset = 0) {
+  const d = new Date();
+  d.setDate(d.getDate() + offset * 7);
+  const day = d.getDay();
+  const diffToMon = (day === 0 ? -6 : 1 - day);
+  
+  const monday = new Date(d);
+  monday.setDate(d.getDate() + diffToMon);
+  monday.setHours(0, 0, 0, 0);
 
-  document.querySelectorAll('.sched-pill').forEach(p => {
-    const day = p.getAttribute('data-day');
-    const baseLabel = DAY_LABELS[day] || (day.charAt(0).toUpperCase() + day.slice(1));
-    if (day === actualTodayKey) {
-      p.innerHTML = `${baseLabel} <span class="text-[9px] bg-gold/25 text-gold px-1.5 py-0.5 rounded-full font-bold ml-0.5">Today</span>`;
-    } else {
-      p.textContent = baseLabel;
-    }
-
-    if (day === currentSchedDay) {
-      p.classList.add('active');
-    } else {
-      p.classList.remove('active');
-    }
+  const weekKeys = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+  const dates = {};
+  weekKeys.forEach((key, idx) => {
+    const dt = new Date(monday);
+    dt.setDate(monday.getDate() + idx);
+    dates[key] = dt;
   });
-
-  const subEl = document.getElementById('sched-week-subtitle');
-  if (subEl) {
-    const d = new Date();
-    const formatted = d.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' });
-    subEl.textContent = `Today: ${formatted} · IMU-CET Prep Schedule`;
-  }
+  return { monday, dates };
 }
 
-function updateScheduleGridToday(todayKey) {
-  const table = document.querySelector('#schedule-grid-container table');
-  if (!table) return;
-  const dayColMap = { mon: 1, tue: 2, wed: 3, thu: 4, fri: 5, sat: 6 };
-  const targetColIndex = dayColMap[todayKey] || -1;
+function getLiveClassStatus(timeStr, targetDate) {
+  const now = new Date();
+  const nowKey = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+  const targetKey = targetDate.getFullYear() + '-' + String(targetDate.getMonth()+1).padStart(2,'0') + '-' + String(targetDate.getDate()).padStart(2,'0');
 
-  // Update header th elements
-  const ths = table.querySelectorAll('thead th');
+  const isToday = (nowKey === targetKey);
+  const isPastDay = (targetKey < nowKey);
+  const isFutureDay = (targetKey > nowKey);
+
+  const [t, mer] = timeStr.split(' ');
+  const [hStr, mStr] = t.split(':');
+  let h = parseInt(hStr, 10);
+  const m = parseInt(mStr, 10);
+  if (mer === 'PM' && h < 12) h += 12;
+  if (mer === 'AM' && h === 12) h = 0;
+  
+  const startMin = h * 60 + m;
+  const isBreak = timeStr === '12:00 PM';
+  const duration = isBreak ? 60 : 90;
+  const endMin = startMin + duration;
+
+  if (isPastDay) {
+    return {
+      status: 'completed',
+      label: 'Concluded',
+      badgeClass: 'bg-gray-100 text-gray-500 border border-gray-200',
+      accentClass: 'bg-gray-300',
+      isLive: false
+    };
+  }
+  
+  if (isFutureDay) {
+    return {
+      status: 'scheduled',
+      label: isBreak ? 'Break' : 'Scheduled',
+      badgeClass: isBreak ? 'bg-amber-50 text-amber-700' : 'bg-slate/15 text-slate font-medium',
+      accentClass: 'bg-deep-sea/40',
+      isLive: false
+    };
+  }
+
+  // Today
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+
+  if (nowMin > endMin) {
+    return {
+      status: 'completed',
+      label: 'Concluded',
+      badgeClass: 'bg-gray-100 text-gray-500 border border-gray-200',
+      accentClass: 'bg-gray-300',
+      isLive: false
+    };
+  }
+
+  if (nowMin >= startMin && nowMin <= endMin) {
+    return {
+      status: 'live',
+      label: isBreak ? 'Lunch Break Now' : 'Live Now',
+      badgeClass: 'bg-emerald-100 text-emerald-800 border border-emerald-400 font-bold',
+      accentClass: 'bg-emerald-500 animate-pulse',
+      isLive: true
+    };
+  }
+
+  const diff = startMin - nowMin;
+  if (diff <= 90) {
+    return {
+      status: 'next',
+      label: `Next Up (${diff}m)`,
+      badgeClass: 'bg-blue-100 text-blue-800 border border-blue-300 font-bold',
+      accentClass: 'bg-blue-600',
+      isLive: false
+    };
+  }
+
+  return {
+    status: 'scheduled',
+    label: isBreak ? 'Lunch Break' : 'Scheduled',
+    badgeClass: isBreak ? 'bg-amber-50 text-amber-700' : 'bg-blue-50 text-blue-700 font-medium',
+    accentClass: 'bg-deep-sea/40',
+    isLive: false
+  };
+}
+
+function changeWeek(delta) {
+  currentWeekOffset += delta;
+  renderCadetSchedule();
+}
+
+function goToCurrentWeek() {
+  currentWeekOffset = 0;
+  currentSchedDay = getTodaySchedDay();
+  renderCadetSchedule();
+}
+
+function selectScheduleDay(day) {
+  currentSchedDay = day;
+  renderCadetSchedule();
+}
+
+function initScheduleDayPills() {
+  const container = document.getElementById('sched-day-pills');
+  if (!container) return;
+
+  const { dates } = getWeekDates(currentWeekOffset);
+  const now = new Date();
+  const nowKey = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+
   const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
-  days.forEach((d, idx) => {
-    const colIdx = idx + 1;
-    const th = ths[colIdx];
-    if (!th) return;
-    const label = d.toUpperCase();
-    if (colIdx === targetColIndex) {
-      th.className = 'p-3 text-center text-xs font-sub text-gold uppercase tracking-wide bg-gold/20 border-x border-gold/40 font-bold';
-      th.innerHTML = `${label}<br><span class="text-[9px] text-gold font-semibold">(Today)</span>`;
+  container.innerHTML = days.map(dKey => {
+    const dt = dates[dKey];
+    const dtKey = dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0') + '-' + String(dt.getDate()).padStart(2,'0');
+    const isToday = (nowKey === dtKey);
+    const isActive = (dKey === currentSchedDay);
+
+    const baseLabel = DAY_LABELS[dKey];
+    const dateNum = dt.getDate();
+
+    let btnClass = isActive ? 'filter-pill active' : 'filter-pill';
+
+    return `
+      <button class="${btnClass} sched-pill" data-day="${dKey}" onclick="selectScheduleDay('${dKey}')">
+        <span>${baseLabel} ${dateNum}</span>
+        ${isToday ? '<span class="text-[9px] bg-gold/25 text-gold px-1.5 py-0.5 rounded-full font-bold ml-1">Today</span>' : ''}
+      </button>
+    `;
+  }).join('');
+}
+
+function renderCadetDaySchedule() {
+  const container = document.getElementById('schedule-day-container');
+  if (!container) return;
+
+  const { dates } = getWeekDates(currentWeekOffset);
+  const targetDate = dates[currentSchedDay] || new Date();
+  const formattedFull = targetDate.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+  const items = WEEKLY_SCHEDULE_DATA[currentSchedDay] || [];
+
+  if (items.length === 0) {
+    container.innerHTML = `
+      <div class="p-6 rounded-2xl bg-white border border-gray-200 text-center text-slate text-xs">
+        <p class="font-bold text-deep-sea text-sm mb-1">${formattedFull}</p>
+        No academy lectures scheduled for this day. Free study and revision period.
+      </div>`;
+    return;
+  }
+
+  const now = new Date();
+  const nowKey = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+  const targetKey = targetDate.getFullYear() + '-' + String(targetDate.getMonth()+1).padStart(2,'0') + '-' + String(targetDate.getDate()).padStart(2,'0');
+  const isToday = (nowKey === targetKey);
+
+  let headerBanner = `
+    <div class="p-3.5 rounded-xl bg-canvas border border-gray-200/80 flex items-center justify-between mb-2">
+      <div>
+        <p class="text-xs font-bold text-deep-sea uppercase tracking-wide">${formattedFull}</p>
+        <p class="text-[11px] text-slate">${items.length} Time Slots · Batch Alpha (DNS &amp; IMU-CET)</p>
+      </div>
+      ${isToday ? '<span class="badge bg-gold text-deep-sea font-bold text-[10px]">Today Active</span>' : ''}
+    </div>
+  `;
+
+  let cardsHtml = items.map(item => {
+    const statusObj = getLiveClassStatus(item.time, targetDate);
+
+    let cardBorder = statusObj.isLive 
+      ? 'border-emerald-400 bg-emerald-50/20 shadow-md ring-1 ring-emerald-400/30'
+      : 'border-gray-200 bg-white hover:border-gold/40 shadow-xs';
+
+    return `
+      <div class="flex items-center gap-3.5 p-4 rounded-2xl border transition-all ${cardBorder}">
+        <div class="w-16 text-center shrink-0 border-r border-gray-100 pr-3">
+          <p class="text-xs font-bold text-deep-sea">${item.time.split(' ')[0]}</p>
+          <p class="text-[10px] text-slate font-semibold uppercase">${item.time.split(' ')[1] || ''}</p>
+        </div>
+        <div class="w-1 self-stretch rounded-full ${statusObj.accentClass} shrink-0"></div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between gap-2 mb-1">
+            <p class="text-sm font-bold text-deep-sea truncate">${item.subject}</p>
+            <span class="badge ${statusObj.badgeClass} shrink-0 text-[9px] flex items-center gap-1">
+              ${statusObj.isLive ? '<span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-ping"></span>' : ''}
+              ${statusObj.label}
+            </span>
+          </div>
+          <p class="text-xs text-slate flex flex-wrap items-center gap-2">
+            <span>${item.faculty}</span>
+            <span class="text-gray-300">•</span>
+            <span class="font-medium text-gray-700">${item.room}</span>
+          </p>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  container.innerHTML = headerBanner + cardsHtml;
+}
+
+function renderScheduleGrid() {
+  const headEl = document.getElementById('schedule-grid-head');
+  const bodyEl = document.getElementById('schedule-grid-body');
+  if (!headEl || !bodyEl) return;
+
+  const { dates } = getWeekDates(currentWeekOffset);
+  const now = new Date();
+  const nowKey = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+
+  const days = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+
+  // 1. Build THEAD
+  let thHtml = `<tr class="bg-deep-sea text-white">
+    <th class="p-3 text-left font-sub uppercase tracking-wider w-20">Time</th>`;
+
+  days.forEach(dKey => {
+    const dt = dates[dKey];
+    const dtKey = dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0') + '-' + String(dt.getDate()).padStart(2,'0');
+    const isToday = (nowKey === dtKey);
+    const dateNum = dt.getDate();
+    const monthShort = dt.toLocaleDateString('en-IN', { month: 'short' });
+    const label = dKey.toUpperCase();
+
+    if (isToday) {
+      thHtml += `<th class="p-3 text-center font-sub uppercase tracking-wide bg-gold/20 text-gold border-x border-gold/40 font-bold">
+        ${label} (${dateNum} ${monthShort})<br><span class="text-[9px] text-gold font-semibold">(Today)</span>
+      </th>`;
     } else {
-      th.className = 'p-3 text-center text-xs font-sub text-white uppercase tracking-wider';
-      th.innerHTML = label;
+      thHtml += `<th class="p-3 text-center font-sub uppercase tracking-wider">
+        ${label} (${dateNum} ${monthShort})
+      </th>`;
     }
   });
+  thHtml += `</tr>`;
+  headEl.innerHTML = thHtml;
 
-  // Update cells in tbody
-  table.querySelectorAll('tbody tr').forEach(tr => {
-    const tds = tr.querySelectorAll('td');
-    for (let c = 1; c <= 6; c++) {
-      const td = tds[c];
-      if (!td) continue;
-      const slotDiv = td.querySelector('.tt-cell');
-      if (c === targetColIndex) {
-        td.classList.add('bg-gold/5');
-        if (slotDiv && slotDiv.classList.contains('class-slot')) {
-          slotDiv.classList.add('today-col');
-        }
+  // 2. Build TBODY
+  const timeSlots = ['07:30 AM', '10:00 AM', '12:00 PM', '02:00 PM', '04:30 PM'];
+
+  let rowsHtml = '';
+  timeSlots.forEach(slotTime => {
+    rowsHtml += `<tr class="divide-x divide-gray-100">
+      <td class="p-2 font-bold text-deep-sea text-center">${slotTime}</td>`;
+
+    days.forEach(dKey => {
+      const dt = dates[dKey];
+      const dtKey = dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0') + '-' + String(dt.getDate()).padStart(2,'0');
+      const isToday = (nowKey === dtKey);
+
+      const dayItems = WEEKLY_SCHEDULE_DATA[dKey] || [];
+      const item = dayItems.find(it => it.time === slotTime);
+
+      const tdTodayClass = isToday ? 'bg-gold/5' : '';
+
+      if (!item) {
+        rowsHtml += `<td class="p-1.5 ${tdTodayClass}"><div class="tt-cell"><p class="text-slate text-center">—</p></div></td>`;
       } else {
-        td.classList.remove('bg-gold/5');
-        if (slotDiv && slotDiv.classList.contains('class-slot')) {
-          slotDiv.classList.remove('today-col');
+        const isBreak = item.type === 'break';
+        const statusObj = getLiveClassStatus(item.time, dt);
+
+        let cellClass = 'tt-cell';
+        if (isBreak) {
+          cellClass += isToday ? ' today-col' : '';
+        } else {
+          cellClass += ' class-slot';
+          if (isToday) cellClass += ' today-col';
+        }
+
+        if (statusObj.isLive) {
+          cellClass += ' ring-2 ring-emerald-500 shadow-sm animate-pulse';
+        }
+
+        let subjectDisplay = item.subject.split('—')[0].trim();
+        let topicDisplay = item.subject.split('—')[1] ? item.subject.split('—')[1].trim() : item.faculty;
+
+        if (isBreak) {
+          rowsHtml += `
+            <td class="p-1.5 ${tdTodayClass}">
+              <div class="${cellClass}">
+                <p class="text-deep-sea/70 text-center font-semibold text-[11px]">${item.subject}</p>
+                <p class="text-[9px] text-slate text-center">${item.room}</p>
+              </div>
+            </td>`;
+        } else {
+          rowsHtml += `
+            <td class="p-1.5 ${tdTodayClass}">
+              <div class="${cellClass}">
+                <div class="flex items-center justify-between">
+                  <p class="font-bold text-[11px] truncate">${subjectDisplay}</p>
+                  ${statusObj.isLive ? '<span class="w-2 h-2 rounded-full bg-emerald-400"></span>' : ''}
+                </div>
+                <p class="text-[10px] opacity-80 truncate">${topicDisplay}</p>
+              </div>
+            </td>`;
         }
       }
-    }
+    });
+
+    rowsHtml += `</tr>`;
   });
+
+  bodyEl.innerHTML = rowsHtml;
+}
+
+function renderCadetSchedule() {
+  const { monday, dates } = getWeekDates(currentWeekOffset);
+  const saturday = dates['sat'];
+
+  const monStr = monday.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  const satStr = saturday.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+
+  const subEl = document.getElementById('sched-week-subtitle');
+  if (subEl) subEl.textContent = `Week of ${monStr} – ${satStr} · Maritime Cadet Timetable`;
+
+  const navLabel = document.getElementById('sched-week-nav-label');
+  if (navLabel) {
+    if (currentWeekOffset === 0) navLabel.textContent = 'Current Week';
+    else if (currentWeekOffset === 1) navLabel.textContent = 'Next Week';
+    else if (currentWeekOffset === -1) navLabel.textContent = 'Previous Week';
+    else navLabel.textContent = `${monStr} – ${satStr}`;
+  }
+
+  const liveHeader = document.getElementById('sched-live-date-header');
+  if (liveHeader) {
+    const now = new Date();
+    const formatted = now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
+    liveHeader.textContent = `Today: ${formatted} · Batch Alpha (DNS & IMU-CET)`;
+  }
+
+  initScheduleDayPills();
+  renderCadetDaySchedule();
+  renderScheduleGrid();
 }
 
 function renderDashboardTodaySchedule() {
@@ -1812,8 +2419,8 @@ function renderDashboardTodaySchedule() {
 
   const todayKey = getTodaySchedDay();
   const d = new Date();
-  const formattedDate = d.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' });
-  if (dateText) dateText.textContent = `${formattedDate} · IMU-CET Prep Agenda`;
+  const formattedDate = d.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
+  if (dateText) dateText.textContent = `Today: ${formattedDate} · IMU-CET Prep Agenda`;
 
   const classes = WEEKLY_SCHEDULE_DATA[todayKey] || [];
   if (classes.length === 0) {
@@ -1822,18 +2429,7 @@ function renderDashboardTodaySchedule() {
   }
 
   cont.innerHTML = classes.map(item => {
-    const isLive = item.badge === 'Live Now' || item.badge === 'Live';
-    const isBreak = item.badge === 'Break';
-    const isSpecial = item.badge === 'Special' || item.badge === 'Test';
-
-    let badgeClass = 'bg-blue-100 text-blue-700';
-    if (isLive) badgeClass = 'bg-emerald-100 text-emerald-700 font-bold';
-    else if (isBreak) badgeClass = 'bg-gray-100 text-gray-600';
-    else if (isSpecial) badgeClass = 'bg-purple-100 text-purple-700 font-bold';
-
-    let borderAccent = 'bg-deep-sea/40';
-    if (isLive) borderAccent = 'bg-emerald-500 animate-pulse';
-    else if (isSpecial) borderAccent = 'bg-gold';
+    const statusObj = getLiveClassStatus(item.time, d);
 
     return `
       <div class="flex items-center gap-3.5 p-3 rounded-xl bg-canvas border border-gray-100 hover:border-gold/40 transition-colors">
@@ -1841,51 +2437,18 @@ function renderDashboardTodaySchedule() {
           <p class="text-xs font-bold text-deep-sea">${item.time.split(' ')[0]}</p>
           <p class="text-[10px] text-slate uppercase">${item.time.split(' ')[1] || ''}</p>
         </div>
-        <div class="w-1 self-stretch rounded-full ${borderAccent} shrink-0"></div>
+        <div class="w-1 self-stretch rounded-full ${statusObj.accentClass} shrink-0"></div>
         <div class="flex-1 min-w-0">
           <p class="text-xs sm:text-sm font-semibold text-deep-sea truncate">${item.subject}</p>
           <p class="text-[11px] text-slate truncate">${item.faculty} · <span class="font-medium text-gray-700">${item.room}</span></p>
         </div>
-        <span class="badge ${badgeClass} shrink-0 text-[9px]">${item.badge}</span>
+        <span class="badge ${statusObj.badgeClass} shrink-0 text-[9px] flex items-center gap-1">
+          ${statusObj.isLive ? '<span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-ping"></span>' : ''}
+          ${statusObj.label}
+        </span>
       </div>
     `;
   }).join('');
-}
-
-function selectScheduleDay(day) {
-  currentSchedDay = day;
-  document.querySelectorAll('.sched-pill').forEach(p => {
-    p.classList.remove('active');
-    if (p.getAttribute('data-day') === day) p.classList.add('active');
-  });
-  renderMobileSchedule(day);
-}
-
-function renderMobileSchedule(day = 'wed') {
-  const container = document.getElementById('schedule-day-container');
-  if (!container) return;
-  const items = WEEKLY_SCHEDULE_DATA[day] || [];
-  if (items.length === 0) {
-    container.innerHTML = `<p class="text-xs text-slate p-6 text-center bg-white rounded-2xl border border-gray-200">No classes scheduled for this day.</p>`;
-    return;
-  }
-  container.innerHTML = items.map(item => `
-    <div class="flex items-center gap-3.5 p-4 rounded-2xl bg-white border border-gray-200 shadow-sm hover:border-gold/40 transition-colors">
-      <div class="w-16 text-center shrink-0 border-r border-gray-100 pr-3">
-        <p class="text-xs font-bold text-deep-sea">${item.time.split(' ')[0]}</p>
-        <p class="text-[10px] text-slate font-semibold uppercase">${item.time.split(' ')[1] || ''}</p>
-      </div>
-      <div class="flex-1 min-w-0">
-        <div class="flex items-center justify-between gap-2 mb-1">
-          <p class="text-sm font-bold text-deep-sea truncate">${item.subject}</p>
-          <span class="badge ${item.color} shrink-0 text-[9px]">${item.badge}</span>
-        </div>
-        <p class="text-xs text-slate flex items-center gap-2">
-          <span>${item.faculty}</span> · <span class="font-medium text-gray-700">${item.room}</span>
-        </p>
-      </div>
-    </div>
-  `).join('');
 }
 
 function toggleScheduleView(mode) {
@@ -1911,7 +2474,7 @@ function toggleScheduleView(mode) {
     btnDay?.classList.remove('text-slate');
     btnGrid?.classList.remove('bg-deep-sea', 'text-white');
     btnGrid?.classList.add('text-slate');
-    renderMobileSchedule(currentSchedDay);
+    renderCadetDaySchedule();
   }
 }
 
@@ -3029,8 +3592,10 @@ window.addEventListener('keydown', (e) => {
 renderMaterials();
 renderAvailableTests();
 fetchNotices();
-initScheduleDayPills();
-updateScheduleGridToday(getTodaySchedDay());
+loadScheduleEvents();
+renderCadetSchedule();
+renderScheduledEventsList();
+renderCalendar();
 renderDashboardTodaySchedule();
 
 // ── MOBILE "MORE" ACTION SHEET LOGIC ─────────
