@@ -145,7 +145,7 @@
 <div class="md:hidden absolute inset-0 bg-surface/80 backdrop-blur-xl"></div>
 
 <div class="glass-panel rounded-xl w-full max-w-lg p-6 md:p-8 relative z-20 overflow-hidden">
-  <a href="../index.html" class="flex items-center gap-1 text-on-surface-variant hover:text-tertiary transition-colors font-body-sm text-body-sm mb-6 group w-fit">
+  <a href="index.html" class="flex items-center gap-1 text-on-surface-variant hover:text-tertiary transition-colors font-body-sm text-body-sm mb-6 group w-fit">
     <span class="material-symbols-outlined text-[18px] group-hover:-translate-x-1 transition-transform">arrow_back</span>
     Back to Home
   </a>
@@ -196,8 +196,8 @@
 
 <script>
   // Supabase Config
-  const SUPABASE_URL = 'https://jqmivbtedttaczkuyxcn.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxbWl2YnRlZHR0YWN6a3V5eGNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTExNjM5NTgsImV4cCI6MjEwNjczOTk1OH0.4-5cZBFziRMcaeVEgTTrtwAz99N1EdJpolv2dp3zwzw';
+  const SUPABASE_URL = 'https://lbdunyobsfdwtmdhuapb.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxiZHVueW9ic2Zkd3RtZGh1YXBiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk5NDExNDYsImV4cCI6MjEwNTUxNzE0Nn0.vnCG22PHUHJ1TitPQCwBJY23xZiH8deVtwnlkLTMAt4';
   let sbClient = null;
   try {
     if (window.supabase) {
@@ -242,7 +242,7 @@
     });
   }
 
-  // --- Dynamic Role Router for Sindhupath_04 Portals ---
+  // --- Dynamic Role Router for Sindhupath Portals ---
   async function redirectByRole(user) {
     try {
       const { data: profile, error } = await sbClient
@@ -252,6 +252,12 @@
         .single();
 
       if (!error && profile?.role) {
+        localStorage.setItem('sindhupath_active_user', JSON.stringify({
+          id: user.id,
+          email: user.email,
+          role: profile.role,
+          name: profile.full_name || user.user_metadata?.full_name || ''
+        }));
         if (profile.role === 'student') {
           window.location.href = 'student-portal.html';
           return;
@@ -266,7 +272,7 @@
     } catch (err) {
       console.warn('Role lookup check failed, falling back to admin portal:', err);
     }
-    // Default fallback in Sindhupath_04
+    // Default fallback
     window.location.href = 'admin-portal.html';
   }
 
@@ -304,6 +310,22 @@
       const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
       
       if (error || !data.session) {
+        // Check if user credentials were provisioned by Admin
+        let localUsers = [];
+        try { localUsers = JSON.parse(localStorage.getItem('sindhupath_users') || '[]'); } catch(e) {}
+        const matched = localUsers.find(u => u.email && u.email.toLowerCase() === email && u.password === password);
+
+        if (matched) {
+          localStorage.setItem('sindhupath_active_user', JSON.stringify(matched));
+          showStatus('✓ Credentials verified! Entering Sindhupath portal...', 'success');
+          setTimeout(() => {
+            if (matched.role === 'student') window.location.href = 'student-portal.html';
+            else if (matched.role === 'faculty') window.location.href = 'faculty-portal.html';
+            else window.location.href = 'admin-portal.html';
+          }, 500);
+          return;
+        }
+
         showStatus('Access Denied: ' + (error?.message || 'Invalid email or password.'), 'error');
         document.getElementById('password').value = '';
         document.getElementById('password').focus();
