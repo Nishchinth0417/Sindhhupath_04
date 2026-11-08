@@ -341,7 +341,56 @@
     text-decoration: underline;
   }
 
+
+  /* Iconify & Segmented Access Controls */
+  .access-control-group {
+    display: inline-flex;
+    background: #f1f5f9;
+    padding: 3px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    gap: 3px;
+  }
+  .access-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 5px 11px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .access-btn:hover {
+    background: rgba(255,255,255,0.7);
+    color: #0B2345;
+  }
+  .access-btn.active-unlocked {
+    background: #dcfce7 !important;
+    color: #166534 !important;
+    border: 1px solid #86efac !important;
+    box-shadow: 0 1px 3px rgba(22,101,52,0.1);
+  }
+  .access-btn.active-locked {
+    background: #fef3c7 !important;
+    color: #92400e !important;
+    border: 1px solid #fcd34d !important;
+    box-shadow: 0 1px 3px rgba(146,64,14,0.1);
+  }
+  .access-btn.active-hidden {
+    background: #fee2e2 !important;
+    color: #991b1b !important;
+    border: 1px solid #fca5a5 !important;
+    box-shadow: 0 1px 3px rgba(153,27,27,0.1);
+  }
+
 </style>
+  <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
 </head>
 <body>
 
@@ -937,6 +986,23 @@
               <button class="btn btn-outline btn-sm" onclick="openModal('modal-assign-faculty')">
                 <span class="material-symbols-outlined" style="font-size:15px;">person_add</span> Assign Faculty to Subject
               </button>
+            </div>
+          </div>
+
+          <!-- Batch Context Selector Bar -->
+          <div style="background:#fff;border:1.5px solid #e2e8f0;border-radius:12px;padding:12px 18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;box-shadow:0 2px 8px rgba(11,35,69,0.03);">
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+              <span style="font-size:12px;font-weight:700;color:#0B2345;text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:6px;">
+                <span class="material-symbols-outlined" style="color:#C89B3C;font-size:18px;">groups_2</span>
+                Active Training Batch:
+              </span>
+              <select id="courses-active-batch-select" class="form-select" style="font-weight:700;color:#0B2345;font-size:13px;height:34px;padding:4px 12px;border-radius:8px;border:1.5px solid #cbd5e1;background:#fff;cursor:pointer;" onchange="switchAdminCoursesBatch(this.value)">
+                <!-- Populated dynamically from ALL_ACADEMY_BATCHES -->
+              </select>
+            </div>
+            <div id="courses-batch-info-badge" style="display:flex;align-items:center;gap:10px;font-size:12px;color:#64748b;">
+              <span class="badge badge-green" style="font-size:10px;padding:3px 8px;font-weight:700;">ACTIVE COHORT</span>
+              <span>Target: <strong id="courses-batch-target-txt" style="color:#0B2345;">IMU-CET June 2026</strong></span>
             </div>
           </div>
 
@@ -1579,40 +1645,76 @@
         <div style="font-size:12px;color:#64748b;" id="mes-roll-display">—</div>
       </div>
 
+      
       <div class="form-group">
-        <label class="form-label" style="margin-bottom:8px;">Academic Course Enrollment *</label>
-        
-        <!-- IMU-CET Option -->
-        <div style="padding:12px;border:1.5px solid #e2e8f0;border-radius:10px;margin-bottom:10px;background:#fff;display:flex;align-items:center;justify-content:space-between;">
+        <label class="form-label" style="margin-bottom:4px;">1. Assigned Batch *</label>
+        <select class="form-select" id="mes-batch" style="margin-bottom:14px;font-weight:600;color:#0B2345;">
+          <!-- Populated dynamically from ALL_ACADEMY_BATCHES -->
+        </select>
+      </div>
+
+      <div class="form-group">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <label class="form-label" style="margin-bottom:0;">2. Course Access &amp; Locking Levels *</label>
+          <span style="font-size:10px;color:#64748b;font-weight:600;">Custom for this cadet</span>
+        </div>
+
+        <!-- IMU-CET Access Control -->
+        <div style="background:#fff;border:1.5px solid #e2e8f0;border-radius:12px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
           <div>
             <div style="font-weight:700;color:#0B2345;font-size:13px;display:flex;align-items:center;gap:6px;">
               <span class="material-symbols-outlined" style="color:#0B2345;font-size:18px;">anchor</span>
               IMU-CET Comprehensive Course
             </div>
-            <div style="font-size:11px;color:#64748b;margin-top:2px;">Base curriculum (Maths, Physics, Chem, Eng, Aptitude, GK).</div>
+            <div style="font-size:11px;color:#64748b;margin-top:2px;">Base curriculum (Maths, Physics, Chem, Eng, Aptitude, GK)</div>
           </div>
-          <input type="checkbox" id="mes-chk-imu" checked disabled style="width:18px;height:18px;accent-color:#0B2345;">
+          <div class="access-control-group" id="mes-group-imu">
+            <button type="button" class="access-btn active-unlocked" id="mes-btn-imu-unlocked" onclick="selectCourseAccess('imu-cet', 'unlocked', 'mes')" title="Unlocked: Full access to all study materials &amp; classes">
+              <span class="iconify" data-icon="lucide:unlock" style="font-size:13px;"></span>
+              <span>Unlocked</span>
+            </button>
+            <button type="button" class="access-btn" id="mes-btn-imu-locked" onclick="selectCourseAccess('imu-cet', 'locked', 'mes')" title="Show as Locked: Marketing preview with unlock CTA">
+              <span class="iconify" data-icon="lucide:lock" style="font-size:13px;"></span>
+              <span>Locked</span>
+            </button>
+            <button type="button" class="access-btn" id="mes-btn-imu-hidden" onclick="selectCourseAccess('imu-cet', 'hidden', 'mes')" title="Hidden: Omit completely from cadet portal">
+              <span class="iconify" data-icon="lucide:eye-off" style="font-size:13px;"></span>
+              <span>Hidden</span>
+            </button>
+          </div>
         </div>
 
-        <!-- Sponsorship Prep Option -->
-        <div style="padding:12px;border:1.5px solid #e2e8f0;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:space-between;">
+        <!-- Sponsorship Prep Access Control -->
+        <div style="background:#fff;border:1.5px solid #e2e8f0;border-radius:12px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
           <div>
             <div style="font-weight:700;color:#0B2345;font-size:13px;display:flex;align-items:center;gap:6px;">
               <span class="material-symbols-outlined" style="color:#C89B3C;font-size:18px;">sailing</span>
               Sponsorship Prep Specialization
             </div>
-            <div style="font-size:11px;color:#64748b;margin-top:2px;">Interview PDFs, company past papers, and technical viva modules.</div>
+            <div style="font-size:11px;color:#64748b;margin-top:2px;">Interview PDFs, company past papers &amp; viva modules</div>
           </div>
+          <div class="access-control-group" id="mes-group-spon">
+            <button type="button" class="access-btn" id="mes-btn-spon-unlocked" onclick="selectCourseAccess('sponsorship-prep', 'unlocked', 'mes')" title="Unlocked: Full access to all study materials &amp; classes">
+              <span class="iconify" data-icon="lucide:unlock" style="font-size:13px;"></span>
+              <span>Unlocked</span>
+            </button>
+            <button type="button" class="access-btn active-locked" id="mes-btn-spon-locked" onclick="selectCourseAccess('sponsorship-prep', 'locked', 'mes')" title="Show as Locked: Marketing preview with unlock CTA">
+              <span class="iconify" data-icon="lucide:lock" style="font-size:13px;"></span>
+              <span>Locked</span>
+            </button>
+            <button type="button" class="access-btn" id="mes-btn-spon-hidden" onclick="selectCourseAccess('sponsorship-prep', 'hidden', 'mes')" title="Hidden: Omit completely from cadet portal">
+              <span class="iconify" data-icon="lucide:eye-off" style="font-size:13px;"></span>
+              <span>Hidden</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
           <input type="checkbox" id="mes-chk-spon" style="width:18px;height:18px;cursor:pointer;accent-color:#C89B3C;">
         </div>
       </div>
 
-      <div class="form-group">
-        <label class="form-label">Assigned Batch</label>
-        <select class="form-select" id="mes-batch">
-          <option value="Winter Batch">Winter Batch</option>
-        </select>
-      </div>
+      
 
       <!-- 3 Options Policy Control inside Student Enrollment Modal -->
       <div style="margin-top:14px;padding:12px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;">
@@ -1668,25 +1770,60 @@
           <input class="form-input" id="s-dob" type="date">
         </div>
       </div>
-      <div class="form-grid">
-        <div class="form-group">
-          <label class="form-label">Course Enrollment *</label>
-          <div style="display:flex;gap:16px;margin-top:6px;">
-            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
-              <input type="checkbox" id="s-enroll-imu" checked disabled style="accent-color:#0B2345;">
-              <strong>IMU-CET</strong> <span style="font-size:11px;color:#64748b;">(Core)</span>
-            </label>
-            <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;">
-              <input type="checkbox" id="s-enroll-spon" style="accent-color:#C89B3C;">
-              <strong>Sponsorship Prep</strong> <span style="font-size:11px;color:#d97706;">(Specialization)</span>
-            </label>
+      
+      <div class="form-group" style="margin-bottom:12px;">
+        <label class="form-label">1. Select Training Batch *</label>
+        <select class="form-select" id="s-batch" style="font-weight:700;color:#0B2345;">
+          <!-- Populated from ALL_ACADEMY_BATCHES -->
+        </select>
+      </div>
+
+      <div class="form-group" style="margin-bottom:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <label class="form-label" style="margin-bottom:0;">2. Individual Course Access &amp; Locking Levels *</label>
+          <span style="font-size:10px;color:#64748b;font-weight:600;">Custom per cadet</span>
+        </div>
+        
+        <!-- IMU-CET Access Control -->
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#0B2345;display:flex;align-items:center;gap:6px;">
+              <span class="material-symbols-outlined" style="font-size:16px;">anchor</span> IMU-CET Core
+            </div>
+            <div style="font-size:10px;color:#64748b;">Full preparatory syllabus</div>
+          </div>
+          <div class="access-control-group" id="as-group-imu">
+            <button type="button" class="access-btn active-unlocked" id="as-btn-imu-unlocked" onclick="selectCourseAccess('imu-cet', 'unlocked', 'as')" title="Unlocked: Cadet has full access">
+              <span class="iconify" data-icon="lucide:unlock" style="font-size:13px;"></span> Unlocked
+            </button>
+            <button type="button" class="access-btn" id="as-btn-imu-locked" onclick="selectCourseAccess('imu-cet', 'locked', 'as')" title="Show as Locked: Marketing preview with CTA">
+              <span class="iconify" data-icon="lucide:lock" style="font-size:13px;"></span> Locked
+            </button>
+            <button type="button" class="access-btn" id="as-btn-imu-hidden" onclick="selectCourseAccess('imu-cet', 'hidden', 'as')" title="Hidden: Omit completely from cadet portal">
+              <span class="iconify" data-icon="lucide:eye-off" style="font-size:13px;"></span> Hidden
+            </button>
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Batch *</label>
-          <select class="form-select" id="s-batch">
-            <option value="Winter Batch">Winter Batch</option>
-          </select>
+
+        <!-- Sponsorship Prep Access Control -->
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#0B2345;display:flex;align-items:center;gap:6px;">
+              <span class="material-symbols-outlined" style="font-size:16px;color:#C89B3C;">sailing</span> Sponsorship Prep
+            </div>
+            <div style="font-size:10px;color:#64748b;">Company question banks &amp; interview prep</div>
+          </div>
+          <div class="access-control-group" id="as-group-spon">
+            <button type="button" class="access-btn" id="as-btn-spon-unlocked" onclick="selectCourseAccess('sponsorship-prep', 'unlocked', 'as')" title="Unlocked: Cadet has full access">
+              <span class="iconify" data-icon="lucide:unlock" style="font-size:13px;"></span> Unlocked
+            </button>
+            <button type="button" class="access-btn active-locked" id="as-btn-spon-locked" onclick="selectCourseAccess('sponsorship-prep', 'locked', 'as')" title="Show as Locked: Marketing preview with CTA">
+              <span class="iconify" data-icon="lucide:lock" style="font-size:13px;"></span> Locked
+            </button>
+            <button type="button" class="access-btn" id="as-btn-spon-hidden" onclick="selectCourseAccess('sponsorship-prep', 'hidden', 'as')" title="Hidden: Omit completely from cadet portal">
+              <span class="iconify" data-icon="lucide:eye-off" style="font-size:13px;"></span> Hidden
+            </button>
+          </div>
         </div>
       </div>
       <div class="form-grid">
@@ -1791,87 +1928,75 @@
     <div class="modal-body" style="padding:22px 26px;background:#f8fafc;">
       <input type="hidden" id="fd-faculty-id">
 
-      <!-- SECTION 1: ASSIGNED TRAINING BATCHES (2 or more) -->
+      <!-- SECTION 1: TEACHING ASSIGNMENTS (Batch -> Course -> Subject) -->
       <div style="background:#fff;border:1.5px solid #e2e8f0;border-radius:14px;padding:18px 20px;margin-bottom:18px;box-shadow:0 2px 8px rgba(11,35,69,0.03);">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
           <div>
             <div style="font-family:'Oswald';font-size:16px;font-weight:600;color:#0B2345;display:flex;align-items:center;gap:6px;">
-              <span class="material-symbols-outlined" style="color:#C89B3C;font-size:20px;">groups_2</span>
-              Assigned Training Batches
+              <span class="material-symbols-outlined" style="color:#C89B3C;font-size:20px;">school</span>
+              Teaching Assignments (Batches &amp; Subjects)
             </div>
             <div style="font-size:11px;color:#64748b;margin-top:2px;">
-              Batches currently taught by this instructor (supports 2 or more batches simultaneously)
+              Instructor can be assigned to multiple subjects across different batches (e.g., Mathematics in Winter &amp; Bravo)
             </div>
           </div>
-          <span id="fd-batch-count-badge" class="badge badge-navy" style="font-size:11px;padding:3px 9px;">2 Batches Active</span>
+          <span id="fd-assignments-count-badge" class="badge badge-navy" style="font-size:11px;padding:3px 9px;">3 Assignments Active</span>
         </div>
 
-        <!-- Rendered Active Batches List -->
-        <div id="fd-batches-container" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-bottom:14px;">
-          <!-- Populated dynamically by openFacultyDetailModal -->
-        </div>
-
-        <!-- Batch Assignment Toggles / Selector -->
-        <div style="padding:12px 14px;background:#f1f5f9;border-radius:10px;border:1px solid #e2e8f0;">
-          <div style="font-size:11px;font-weight:700;color:#0B2345;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
-            <span class="material-symbols-outlined" style="font-size:15px;color:#C89B3C;">add_task</span>
-            Toggle Batch Assignments:
-          </div>
-          <div id="fd-batch-checkboxes" style="display:flex;gap:12px;flex-wrap:wrap;">
-            <!-- Checkboxes populated dynamically -->
-          </div>
-        </div>
-      </div>
-
-      <!-- SECTION 2: SUBJECTS & CURRICULUM -->
-      <div style="background:#fff;border:1.5px solid #e2e8f0;border-radius:14px;padding:18px 20px;margin-bottom:18px;box-shadow:0 2px 8px rgba(11,35,69,0.03);">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-          <div>
-            <div style="font-family:'Oswald';font-size:16px;font-weight:600;color:#0B2345;display:flex;align-items:center;gap:6px;">
-              <span class="material-symbols-outlined" style="color:#C89B3C;font-size:20px;">menu_book</span>
-              Subjects &amp; Course Disciplines
-            </div>
-            <div style="font-size:11px;color:#64748b;margin-top:2px;">
-              Curriculum disciplines and interview modules conducted by this instructor
-            </div>
-          </div>
-          <span id="fd-subject-count-badge" class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d;font-size:11px;padding:3px 9px;">2 Subjects</span>
-        </div>
-
-        <!-- Rendered Subjects List -->
-        <div id="fd-subjects-container" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-bottom:14px;">
+        <!-- Rendered Assignments Grouped by Batch -->
+        <div id="fd-assignments-container" style="display:grid;gap:12px;margin-bottom:16px;">
           <!-- Populated dynamically -->
         </div>
 
-        <!-- Subject Assignment Selector -->
-        <div style="padding:12px 14px;background:#f1f5f9;border-radius:10px;border:1px solid #e2e8f0;">
-          <div style="font-size:11px;font-weight:700;color:#0B2345;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
-            <span class="material-symbols-outlined" style="font-size:15px;color:#C89B3C;">school</span>
-            Toggle Subject Assignments:
+        <!-- Add New Assignment Builder -->
+        <div style="padding:14px 16px;background:#f8fafc;border-radius:12px;border:1.5px dashed #cbd5e1;">
+          <div style="font-size:11px;font-weight:700;color:#0B2345;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+            <span class="material-symbols-outlined" style="font-size:16px;color:#C89B3C;">add_circle</span>
+            Assign New Subject in a Batch:
           </div>
-          <div id="fd-subject-checkboxes" style="display:flex;gap:12px;flex-wrap:wrap;">
-            <!-- Checkboxes populated dynamically -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr)) auto;gap:10px;align-items:flex-end;">
+            <div>
+              <label style="font-size:10px;color:#64748b;font-weight:700;text-transform:uppercase;margin-bottom:4px;display:block;">1. Select Batch</label>
+              <select id="fd-assign-batch-select" class="form-select" style="font-size:12px;padding:4px 8px;height:34px;width:100%;font-weight:600;color:#0B2345;" onchange="updateFdAssignCourses()">
+                <!-- Populated dynamically -->
+              </select>
+            </div>
+            <div>
+              <label style="font-size:10px;color:#64748b;font-weight:700;text-transform:uppercase;margin-bottom:4px;display:block;">2. Select Course</label>
+              <select id="fd-assign-course-select" class="form-select" style="font-size:12px;padding:4px 8px;height:34px;width:100%;font-weight:600;color:#0B2345;" onchange="updateFdAssignSubjects()">
+                <option value="imu-cet">IMU-CET</option>
+                <option value="sponsorship-prep">Sponsorship Prep</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size:10px;color:#64748b;font-weight:700;text-transform:uppercase;margin-bottom:4px;display:block;">3. Select Subject</label>
+              <select id="fd-assign-subj-select" class="form-select" style="font-size:12px;padding:4px 8px;height:34px;width:100%;font-weight:600;color:#0B2345;">
+                <!-- Populated dynamically -->
+              </select>
+            </div>
+            <div>
+              <button type="button" class="btn btn-navy" onclick="addAssignmentToCurrentFaculty()" style="height:34px;padding:0 14px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:4px;">
+                <span class="material-symbols-outlined" style="font-size:16px;">add</span> Add Assignment
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- SECTION 3: WEEKLY TEACHING SCHEDULE / TIMETABLE -->
+      <!-- SECTION 2: WEEKLY TEACHING SCHEDULE / TIMETABLE -->
       <div style="background:#fff;border:1.5px solid #e2e8f0;border-radius:14px;padding:18px 20px;box-shadow:0 2px 8px rgba(11,35,69,0.03);">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
           <div style="font-family:'Oswald';font-size:16px;font-weight:600;color:#0B2345;display:flex;align-items:center;gap:6px;">
             <span class="material-symbols-outlined" style="color:#C89B3C;font-size:20px;">calendar_month</span>
             Weekly Lecture &amp; Simulator Schedule
           </div>
-          <span style="font-size:11px;color:#64748b;">Assigned Lecture Slots</span>
+          <span style="font-size:11px;color:#64748b;">Scheduled Slots across Batches</span>
         </div>
         <div id="fd-schedule-container" style="display:grid;gap:8px;">
-          <!-- Schedule cards populated dynamically -->
+          <!-- Populated dynamically -->
         </div>
       </div>
-
     </div>
-
-    <!-- Modal Footer Actions -->
     <div class="modal-footer" style="padding:16px 28px;background:#fff;border-top:1.5px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center;">
       <button class="btn btn-ghost" onclick="closeModal('modal-faculty-detail')">Close</button>
       <div style="display:flex;gap:8px;">
@@ -2372,6 +2497,117 @@
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-add-course')">Cancel</button>
       <button class="btn btn-gold" onclick="saveCourse()">Save Course</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Create New Batch Modal -->
+<div class="modal-overlay" id="modal-add-batch" role="dialog" aria-modal="true" aria-labelledby="modal-title-add-batch" onclick="if(event.target===this) closeModal('modal-add-batch')">
+  <div class="modal" style="max-width:520px;border-radius:16px;">
+    <div class="modal-header">
+      <div>
+        <span class="modal-title" id="modal-title-add-batch" style="display:flex;align-items:center;gap:6px;">
+          <span class="material-symbols-outlined" style="color:#C89B3C;font-size:20px;">groups_2</span>
+          Create New Training Batch
+        </span>
+        <p style="font-size:12px;color:#64748b;margin-top:2px;">Initialize a new cadet cohort with courses, subjects and faculty.</p>
+      </div>
+      <button class="modal-close" aria-label="Close modal" onclick="closeModal('modal-add-batch')">
+        <span class="material-symbols-outlined" style="font-size:16px;">close</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Batch Name *</label>
+          <input class="form-input" id="nb-name" placeholder="e.g. Batch Bravo, Spring 2027" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Batch Code *</label>
+          <input class="form-input" id="nb-code" placeholder="e.g. BB-2026, SP-2027">
+        </div>
+      </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Target Entrance Exam</label>
+          <input class="form-input" id="nb-target" placeholder="e.g. IMU-CET June 2026 / DNS Sponsorship">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Start Date</label>
+          <input class="form-input" id="nb-start" type="date">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Courses Included in this Batch *</label>
+        <div style="display:flex;gap:16px;padding:12px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#0B2345;cursor:pointer;">
+            <input type="checkbox" id="nb-course-imu" checked style="width:16px;height:16px;accent-color:#0B2345;">
+            <span>IMU-CET Core</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#0B2345;cursor:pointer;">
+            <input type="checkbox" id="nb-course-spon" checked style="width:16px;height:16px;accent-color:#C89B3C;">
+            <span>Sponsorship Prep</span>
+          </label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Schedule &amp; Description</label>
+        <textarea class="form-textarea" id="nb-desc" rows="2" placeholder="e.g. Tuesday &amp; Thursday 02:00 PM · Radar Room &amp; Bridge Simulation"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-batch')">Cancel</button>
+      <button class="btn btn-gold" onclick="saveNewBatch()">Create Batch</button>
+    </div>
+  </div>
+</div>
+
+<!-- Assign Faculty to Subject Modal -->
+<div class="modal-overlay" id="modal-assign-faculty" role="dialog" aria-modal="true" onclick="if(event.target===this) closeModal('modal-assign-faculty')">
+  <div class="modal" style="max-width:520px;border-radius:16px;">
+    <div class="modal-header">
+      <div>
+        <span class="modal-title" style="display:flex;align-items:center;gap:6px;">
+          <span class="material-symbols-outlined" style="color:#C89B3C;font-size:20px;">person_add</span>
+          Assign Faculty to Subject
+        </span>
+        <p style="font-size:12px;color:#64748b;margin-top:2px;">Map instructor to a particular subject of a course within a batch.</p>
+      </div>
+      <button class="modal-close" aria-label="Close modal" onclick="closeModal('modal-assign-faculty')">
+        <span class="material-symbols-outlined" style="font-size:16px;">close</span>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">1. Select Batch *</label>
+        <select class="form-select" id="af-batch-select" onchange="updateAssignFacultySubjects()">
+          <!-- Populated from ALL_ACADEMY_BATCHES -->
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">2. Select Course in Batch *</label>
+        <select class="form-select" id="af-course-select" onchange="updateAssignFacultySubjects()">
+          <option value="imu-cet">IMU-CET</option>
+          <option value="sponsorship-prep">Sponsorship Prep</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">3. Select Subject *</label>
+        <select class="form-select" id="af-subject-select">
+          <!-- Populated dynamically -->
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">4. Assign Instructor / Faculty Member *</label>
+        <select class="form-select" id="af-faculty-select">
+          <!-- Populated from appFaculty -->
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-assign-faculty')">Cancel</button>
+      <button class="btn btn-gold" onclick="confirmAssignFaculty()">Assign Faculty</button>
     </div>
   </div>
 </div>
@@ -3171,19 +3407,17 @@ function renderStudents(list = null) {
   document.getElementById('student-count').textContent = `Showing ${data.length} students`;
   tbody.innerHTML = data.length === 0
     ? '<tr><td colspan="8"><div class="empty-state"><div class="icon">🎓</div><div>No students found.</div></div></td></tr>'
-    : data.map(s => {
-      const courseStr = s.course || 'IMU-CET';
-      const hasSpon = (Array.isArray(s.courses) && s.courses.some(c => c.toLowerCase().includes('sponsorship'))) || courseStr.toLowerCase().includes('sponsorship');
-
-      return `
-      <tr>
+    : data.map(s => `
+      <tr class="student-row-clickable">
         <td><span style="font-family:monospace;font-size:12px;color:#64748b;">${s.roll || s.roll_number || '—'}</span></td>
         <td>
           <strong>${s.name || s.full_name || '—'}</strong>
           ${s.email ? `<div style="font-size:11px;color:#64748b;display:flex;align-items:center;gap:3px;margin-top:2px;"><span class="material-symbols-outlined" style="font-size:12px;color:#C89B3C;">mail</span>${s.email}</div>` : ''}
         </td>
-        <td><span style="font-size:12px;color:#0B2345;font-weight:600;">${hasSpon ? 'IMU-CET, Sponsorship Prep' : (s.course || 'IMU-CET')}</span></td>
-        <td><span style="font-weight:600;color:#0B2345;font-size:12px;">${s.batch || 'Winter Batch'}</span></td>
+        <td>
+          ${renderStudentCourseAccessBadges(s)}
+        </td>
+        <td><span style="font-weight:700;color:#0B2345;font-size:12px;">${s.batch || 'Winter Batch'}</span></td>
         <td>
           <div style="display:flex;align-items:center;gap:6px;">
             <div class="progress-bar" style="width:60px;display:inline-block;">
@@ -3196,15 +3430,14 @@ function renderStudents(list = null) {
         <td style="font-size:12px;color:#94a3b8;">${fmtDate(s.joined || s.created_at)}</td>
         <td>
           <div style="display:flex;gap:4px;">
-            <button class="btn btn-outline btn-xs" onclick="openEnrollStudentModal('${s.id}')" title="Manage Course Enrollment &amp; Locks" style="color:#0B2345;font-weight:600;">
+            <button class="btn btn-outline btn-xs" onclick="openEnrollStudentModal('${s.id}')" title="Configure Course Access &amp; Batch" style="color:#0B2345;font-weight:600;">
               <span class="material-symbols-outlined" style="font-size:12px;color:#C89B3C;">school</span> Courses
             </button>
             <button class="btn btn-ghost btn-xs" onclick="editStudent('${s.id}')">Edit</button>
             <button class="btn btn-danger btn-xs" onclick="deleteStudent('${s.id}')">Del</button>
           </div>
         </td>
-      </tr>`;
-    }).join('');
+      </tr>`).join('');
 }
 
 function openEnrollStudentModal(studentId) {
@@ -3214,17 +3447,23 @@ function openEnrollStudentModal(studentId) {
   document.getElementById('mes-student-id').value = s.id;
   document.getElementById('mes-name-display').textContent = s.name || s.full_name || 'Cadet';
   document.getElementById('mes-roll-display').textContent = `Roll: ${s.roll || s.roll_number || '—'} · ${s.email || ''}`;
-  
-  const courseStr = s.course || 'IMU-CET';
-  const hasSpon = (Array.isArray(s.courses) && s.courses.some(c => c.toLowerCase().includes('sponsorship'))) || courseStr.toLowerCase().includes('sponsorship');
 
-  const chkSpon = document.getElementById('mes-chk-spon');
-  if (chkSpon) chkSpon.checked = hasSpon;
-
+  // Populate batches dropdown
+  populateAllBatchDropdowns();
   const bSelect = document.getElementById('mes-batch');
   if (bSelect) bSelect.value = s.batch || 'Winter Batch';
 
-  syncPolicyUI();
+  // Read student-level access or infer from existing courses
+  const hasSpon = (Array.isArray(s.courses) && s.courses.some(c => c.toLowerCase().includes('sponsorship'))) || (s.course && s.course.toLowerCase().includes('sponsorship'));
+  
+  currentEnrollStudentAccess = s.courseAccess ? Object.assign({}, s.courseAccess) : {
+    'imu-cet': 'unlocked',
+    'sponsorship-prep': hasSpon ? 'unlocked' : 'locked'
+  };
+
+  selectCourseAccess('imu-cet', currentEnrollStudentAccess['imu-cet'] || 'unlocked', 'mes');
+  selectCourseAccess('sponsorship-prep', currentEnrollStudentAccess['sponsorship-prep'] || 'locked', 'mes');
+
   openModal('modal-enroll-student');
 }
 
@@ -3233,30 +3472,30 @@ function saveStudentCourseEnrollment() {
   const s = appStudents.find(x => String(x.id) === String(studentId));
   if (!s) return;
 
-  const isSponEnrolled = document.getElementById('mes-chk-spon')?.checked;
   const batch = document.getElementById('mes-batch')?.value || 'Winter Batch';
-
   s.batch = batch;
-  if (isSponEnrolled) {
-    s.courses = ['IMU-CET', 'Sponsorship Prep'];
-    s.course = 'IMU-CET, Sponsorship Prep';
-    toast(`Enrolled ${s.name} in Sponsorship Prep! (Course Unlocked)`, '#16a34a');
-  } else {
-    s.courses = ['IMU-CET'];
-    s.course = 'IMU-CET';
-    toast(`Updated ${s.name}: Enrolled in IMU-CET only. (Sponsorship Locked)`, '#0B2345');
-  }
+  s.courseAccess = Object.assign({}, currentEnrollStudentAccess);
+
+  // Reconcile courses array
+  const activeCourses = [];
+  if (s.courseAccess['imu-cet'] === 'unlocked') activeCourses.push('IMU-CET');
+  if (s.courseAccess['sponsorship-prep'] === 'unlocked') activeCourses.push('Sponsorship Prep');
+
+  s.courses = activeCourses.length > 0 ? activeCourses : ['IMU-CET'];
+  s.course = s.courses.join(', ');
 
   try {
     localStorage.setItem('sp_students', JSON.stringify(appStudents));
+    localStorage.setItem('sindhupath_students', JSON.stringify(appStudents));
   } catch(e) {}
 
   if (sbClient) {
-    sbClient.from('students').update({ course: s.course, batch: s.batch }).eq('id', s.id).then();
+    sbClient.from('students').update({ course: s.course, batch: s.batch, course_access: s.courseAccess }).eq('id', s.id).then();
   }
 
   closeModal('modal-enroll-student');
   renderStudents();
+  toast(`✓ Updated ${s.name} course access in ${batch}`, '#16a34a');
 }
 
 function quickEnrollSponsorship(studentId) {
@@ -3324,121 +3563,73 @@ async function saveStudent() {
   if (!password || password.length < 6) { toast('Please provide an initial password (min 6 characters)', '#dc2626'); return; }
 
   const roll = document.getElementById('s-roll').value.trim() || `SP-2026-${String(appStudents.length+1).padStart(3,'0')}`;
-  const isSpon = document.getElementById('s-enroll-spon')?.checked;
-  const course = isSpon ? 'IMU-CET, Sponsorship Prep' : 'IMU-CET';
-  const courses = isSpon ? ['IMU-CET', 'Sponsorship Prep'] : ['IMU-CET'];
   const batch = document.getElementById('s-batch')?.value || 'Winter Batch';
 
-  const newStudent = {
-    id: Date.now(),
-    roll,
+  const activeCourses = [];
+  if (currentAddStudentAccess['imu-cet'] === 'unlocked') activeCourses.push('IMU-CET');
+  if (currentAddStudentAccess['sponsorship-prep'] === 'unlocked') activeCourses.push('Sponsorship Prep');
+
+  const newS = {
+    id: `stud_${Date.now()}`,
     name: `${fname} ${lname}`,
-    email,
+    full_name: `${fname} ${lname}`,
+    roll: roll,
+    roll_number: roll,
+    email: email,
+    dob: document.getElementById('s-dob')?.value || '',
+    batch: batch,
     mobile: document.getElementById('s-mobile')?.value || '',
-    course,
-    courses,
-    batch,
-    attendance: parseInt(document.getElementById('s-attendance')?.value) || 85,
     fees_status: document.getElementById('s-feestatus')?.value || 'Pending',
+    fee_status: document.getElementById('s-feestatus')?.value || 'Pending',
+    attendance: 85,
     joined: new Date().toISOString().split('T')[0],
+    courseAccess: Object.assign({}, currentAddStudentAccess),
+    courses: activeCourses.length > 0 ? activeCourses : ['IMU-CET'],
+    course: (activeCourses.length > 0 ? activeCourses : ['IMU-CET']).join(', ')
   };
 
-  // 1. Provision credentials in shared sindhupath_users store for immediate login at login.html
+  // Provision credentials in shared sindhupath_users store for login at login.html
   let allUsers = [];
-  try {
-    allUsers = JSON.parse(localStorage.getItem('sindhupath_users') || '[]');
-  } catch(e) { allUsers = []; }
-
+  try { allUsers = JSON.parse(localStorage.getItem('sindhupath_users') || '[]'); } catch(e) { allUsers = []; }
   const existingIdx = allUsers.findIndex(u => u.email.toLowerCase() === email);
   const userRecord = {
-    id: 'cadet_' + Date.now(),
+    id: 'user_' + Date.now(),
     email,
     password,
-    role: 'student',
-    name: newStudent.name,
-    roll: newStudent.roll,
-    course: newStudent.course,
-    batch: newStudent.batch,
+    role: 'cadet',
+    name: newS.name,
+    roll_number: newS.roll,
+    batch: newS.batch,
+    courseAccess: newS.courseAccess,
     must_change_password: true,
     created_at: new Date().toISOString()
   };
+  if (existingIdx >= 0) allUsers[existingIdx] = userRecord;
+  else allUsers.push(userRecord);
+  try { localStorage.setItem('sindhupath_users', JSON.stringify(allUsers)); } catch(e) {}
 
-  if (existingIdx >= 0) {
-    allUsers[existingIdx] = userRecord;
-  } else {
-    allUsers.push(userRecord);
-  }
-  localStorage.setItem('sindhupath_users', JSON.stringify(allUsers));
+  appStudents.unshift(newS);
+  try {
+    localStorage.setItem('sp_students', JSON.stringify(appStudents));
+    localStorage.setItem('sindhupath_students', JSON.stringify(appStudents));
+  } catch(e) {}
 
-  // 2. Persist student in saved roster
-  let savedStudents = [];
-  try { savedStudents = JSON.parse(localStorage.getItem('sindhupath_saved_students') || '[]'); } catch(e) {}
-  savedStudents.unshift(newStudent);
-  localStorage.setItem('sindhupath_saved_students', JSON.stringify(savedStudents));
-
-  // 3. Register directly with Supabase Auth & persist to public.students table
-  let supabaseSuccess = false;
-  let supabaseMsg = '';
-  if (sbAuthProvisionClient) {
-    try {
-      const { data, error } = await sbAuthProvisionClient.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            role: 'student',
-            full_name: newStudent.name
-          }
-        }
-      });
-      if (error) {
-        supabaseMsg = error.message;
-        console.warn('Supabase signup notice:', error);
-      } else if (data?.user) {
-        supabaseSuccess = true;
-        console.log('Supabase signup success:', data.user);
-      }
-
-      // Also persist row to public.students table
-      if (sbClient) {
-        sbClient.from('students').insert([{
-          user_id: data?.user?.id || null,
-          roll: newStudent.roll,
-          name: newStudent.name,
-          email: newStudent.email,
-          mobile: newStudent.mobile,
-          course: newStudent.course,
-          batch: newStudent.batch,
-          attendance: newStudent.attendance,
-          fees_status: newStudent.fees_status,
-          joined: newStudent.joined
-        }]).then(res => {
-          console.log('Student row inserted in public.students table:', res);
-        }).catch(e => console.warn('Students table insert note:', e));
-      }
-    } catch (err) {
-      supabaseMsg = err.message || 'Network exception';
-    }
+  if (sbClient) {
+    sbClient.from('students').insert([{
+      name: newS.name,
+      roll_number: newS.roll,
+      email: newS.email,
+      batch: newS.batch,
+      course: newS.course,
+      fees_status: newS.fees_status,
+      attendance: newS.attendance
+    }]).then().catch(e => console.warn('Supabase student insert note:', e));
   }
 
-  // 4. Update UI
-  appStudents.unshift(newStudent);
-  renderStudents();
   closeModal('modal-add-student');
-
-  if (supabaseSuccess) {
-    toast(`✓ Student "${newStudent.name}" created and synced to Supabase Auth!`, '#16a34a', 5000);
-  } else if (supabaseMsg) {
-    toast(`Saved locally. Supabase Auth notice: ${supabaseMsg}`, '#f59e0b', 7000);
-  } else {
-    toast(`✓ Student "${newStudent.name}" saved! Ready at login.html`, '#16a34a', 5000);
-  }
-
-  // Reset form
-  ['s-fname','s-lname','s-roll','s-attendance','s-mobile','s-email','s-password','s-address'].forEach(id => {
-    const el = document.getElementById(id);
-    if(el) el.value = '';
-  });
+  renderStudents();
+  updateOverviewKPIs();
+  toast(`✓ Added student ${newS.name} to ${batch}`, '#16a34a');
 }
 
 function editStudent(id) {
@@ -3497,6 +3688,100 @@ function getFacultySubjects(f) {
   return ['Nautical Science'];
 }
 
+
+function openFacultyDetailModal(facultyId) {
+  const f = appFaculty.find(x => String(x.id) === String(facultyId));
+  if (!f) return;
+
+  document.getElementById('fd-faculty-id').value = f.id;
+  document.getElementById('fd-name').textContent = f.name || f.full_name || 'Faculty Member';
+  document.getElementById('fd-id').textContent = f.id || '—';
+  document.getElementById('fd-qual').innerHTML = `<span class="material-symbols-outlined" style="font-size:15px;color:#C89B3C;">school</span> ${f.qualification || 'Master Mariner / CoC'}`;
+  document.getElementById('fd-email').innerHTML = `<span class="material-symbols-outlined" style="font-size:15px;color:#C89B3C;">mail</span> ${f.email || '—'}`;
+  
+  const initials = (f.name || f.full_name || 'FM').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  document.getElementById('fd-avatar').textContent = initials;
+  document.getElementById('fd-designation-badge').textContent = f.designation || 'Instructor';
+
+  const statusBadge = document.getElementById('fd-status-badge');
+  const isActive = (f.status || 'Active').toLowerCase() === 'active';
+  statusBadge.className = isActive ? 'badge badge-green' : 'badge badge-orange';
+  statusBadge.textContent = f.status || 'Active';
+
+  // Load and render assignments
+  activeFacultyDraftAssignments = getFacultyAssignments(f);
+  renderFdAssignmentsUI();
+
+  // Populate builder dropdowns
+  populateAllBatchDropdowns();
+  updateFdAssignSubjects();
+
+  // Render weekly schedule preview
+  const schedContainer = document.getElementById('fd-schedule-container');
+  if (schedContainer) {
+    const slots = activeFacultyDraftAssignments.map((a, i) => {
+      const days = i % 2 === 0 ? 'Mon, Wed, Fri' : 'Tue, Thu';
+      const time = i % 2 === 0 ? '10:00 AM – 11:30 AM' : '02:00 PM – 03:30 PM';
+      const room = a.subject.toLowerCase().includes('viva') || a.subject.toLowerCase().includes('colreg') ? 'Radar Sim Lab' : 'Lecture Hall A';
+      return `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;font-size:12px;flex-wrap:wrap;gap:8px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span class="material-symbols-outlined" style="color:#0B2345;font-size:18px;">schedule</span>
+            <div>
+              <strong style="color:#0B2345;">${days} · ${time}</strong>
+              <div style="font-size:11px;color:#64748b;">${room} · <span style="color:#16a34a;font-weight:600;">Active Session</span></div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span class="badge badge-navy" style="font-size:10px;">${a.batch}</span>
+            <span class="badge badge-gold" style="font-size:10px;">${a.subject}</span>
+          </div>
+        </div>
+      `;
+    });
+    schedContainer.innerHTML = slots.length > 0 ? slots.join('') : '<div style="color:#94a3b8;font-size:12px;padding:8px;">No scheduled sessions currently.</div>';
+  }
+
+  openModal('modal-faculty-detail');
+}
+
+function saveFacultyDetailAssignments() {
+  const facultyId = document.getElementById('fd-faculty-id').value;
+  const f = appFaculty.find(x => String(x.id) === String(facultyId));
+  if (!f) return;
+
+  if (activeFacultyDraftAssignments.length === 0) {
+    toast('Please keep at least one teaching assignment for this faculty member', '#dc2626');
+    return;
+  }
+
+  f.assignments = activeFacultyDraftAssignments.slice();
+  
+  // Update backward-compatible fields
+  const distinctBatches = Array.from(new Set(f.assignments.map(a => a.batch)));
+  const distinctSubjects = Array.from(new Set(f.assignments.map(a => a.subject)));
+  f.batches = distinctBatches;
+  f.batch = distinctBatches[0];
+  f.subjects = distinctSubjects;
+  f.subject = distinctSubjects[0];
+
+  try {
+    localStorage.setItem('sindhupath_saved_faculty', JSON.stringify(appFaculty));
+  } catch(e) {}
+
+  if (sbClient) {
+    sbClient.from('faculty').update({
+      assignments: f.assignments,
+      batches: f.batches,
+      subject: f.subject
+    }).eq('id', f.id).then();
+  }
+
+  closeModal('modal-faculty-detail');
+  renderFaculty();
+  toast(`✓ Saved ${f.assignments.length} teaching assignments for ${f.name}`, '#16a34a');
+}
+
 function renderFaculty(list = null) {
   const data = list || applyFacultyFilters();
   const tbody = document.getElementById('faculty-tbody');
@@ -3524,9 +3809,15 @@ function renderFaculty(list = null) {
         </td>
         <td><span style="font-weight:600;color:#0B2345;font-size:12px;">${f.designation||'Instructor'}</span></td>
         <td>
-          <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
-            <span class="tag tag-gold">${primarySubject}</span>
-            ${extraSubjects}
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+              <span class="tag tag-gold">${primarySubject}</span>
+              ${extraSubjects}
+            </div>
+            <div style="font-size:11px;color:#64748b;display:flex;align-items:center;gap:4px;margin-top:2px;">
+              <span class="iconify" data-icon="lucide:users" style="font-size:12px;color:#C89B3C;"></span>
+              <span style="font-weight:600;color:#0B2345;">${batches.join(', ')}</span>
+            </div>
           </div>
         </td>
         <td style="font-size:12px;color:#64748b;">${f.qualification||'—'}</td>
@@ -3546,219 +3837,326 @@ function renderFaculty(list = null) {
 }
 
 // ── DETAILED FACULTY PROFILE & TEACHING ASSIGNMENTS CONTROLLER ──
-const ALL_ACADEMY_BATCHES = [
-  { id: 'winter', name: 'Winter Batch', icon: 'ac_unit', cadets: 32, progress: 68, schedule: 'Mon, Wed, Fri · 10:00 AM' },
-  { id: 'alpha', name: 'Batch Alpha', icon: 'anchor', cadets: 28, progress: 54, schedule: 'Tue, Thu · 02:00 PM' },
-  { id: 'bravo', name: 'Batch Bravo', icon: 'sailing', cadets: 24, progress: 42, schedule: 'Sat, Sun · 09:30 AM' }
+
+// ════════════════════════════════════════════════════════════════
+// BATCH -> COURSE -> SUBJECT HIERARCHY & INDIVIDUAL COURSE LOCKING
+// ════════════════════════════════════════════════════════════════
+
+let ALL_ACADEMY_BATCHES = [
+  { id: 'winter', name: 'Winter Batch', code: 'WB-2026', target: 'IMU-CET June 2026', cadets: 32, progress: 68, schedule: 'Mon, Wed, Fri · 10:00 AM' },
+  { id: 'bravo', name: 'Batch Bravo', code: 'BB-2026', target: 'DNS Sponsorship 2026', cadets: 24, progress: 42, schedule: 'Tue, Thu · 02:00 PM' },
+  { id: 'alpha', name: 'Batch Alpha', code: 'BA-2026', target: 'IMU-CET Dec 2026', cadets: 28, progress: 54, schedule: 'Sat, Sun · 09:30 AM' }
 ];
 
-const ALL_ACADEMY_SUBJECTS = [
-  { name: 'Nautical Science', course: 'IMU-CET', icon: 'sailing', desc: 'Core Maritime Navigation & Seamanship' },
-  { name: 'Mathematics', course: 'IMU-CET', icon: 'calculate', desc: 'Calculus, Trigonometry & Coordinate Geometry' },
-  { name: 'Physics', course: 'IMU-CET', icon: 'bolt', desc: 'Kinematics, Thermodynamics & Waves' },
-  { name: 'COLREGs & Navigation Viva', course: 'Sponsorship Prep', icon: 'compass_calibration', desc: 'Steering Rules, Bridge Watchkeeping & Oral Prep' },
-  { name: 'Technical Viva & Seamanship', course: 'Sponsorship Prep', icon: 'menu_book', desc: 'Ship Stability, Buoyancy & Deck Safety' },
-  { name: 'Maritime HR & Interview', course: 'Sponsorship Prep', icon: 'psychology', desc: 'Behavioral Questions & Panel Simulation' }
-];
+let currentActiveCoursesBatch = 'Winter Batch';
 
-function openFacultyDetailModal(facultyId) {
-  const f = appFaculty.find(x => String(x.id) === String(facultyId));
-  if (!f) return;
-
-  document.getElementById('fd-faculty-id').value = f.id;
-  document.getElementById('fd-name').textContent = f.name || f.full_name || 'Faculty Member';
-  document.getElementById('fd-id').textContent = f.id || '—';
-  document.getElementById('fd-qual').innerHTML = `<span class="material-symbols-outlined" style="font-size:15px;color:#C89B3C;">school</span> ${f.qualification || 'Master Mariner / CoC'}`;
-  document.getElementById('fd-email').innerHTML = `<span class="material-symbols-outlined" style="font-size:15px;color:#C89B3C;">mail</span> ${f.email || '—'}`;
-  
-  const initials = (f.name || f.full_name || 'FM').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-  document.getElementById('fd-avatar').textContent = initials;
-  document.getElementById('fd-designation-badge').textContent = f.designation || 'Instructor';
-
-  const statusBadge = document.getElementById('fd-status-badge');
-  const isActive = (f.status || 'Active').toLowerCase() === 'active';
-  statusBadge.className = isActive ? 'badge badge-green' : 'badge badge-orange';
-  statusBadge.textContent = f.status || 'Active';
-
-  // 1. Render Batches
-  const activeBatches = getFacultyBatches(f);
-  document.getElementById('fd-batch-count-badge').textContent = `${activeBatches.length} Batch${activeBatches.length > 1 ? 'es' : ''} Active`;
-
-  const bContainer = document.getElementById('fd-batches-container');
-  bContainer.innerHTML = activeBatches.map(bName => {
-    const meta = ALL_ACADEMY_BATCHES.find(b => b.name.toLowerCase() === bName.toLowerCase()) || {
-      name: bName, icon: 'groups_2', cadets: 30, progress: 60, schedule: 'Standard Academy Hours'
-    };
-    return `
-      <div style="padding:14px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;display:flex;flex-direction:column;justify-content:space-between;">
-        <div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-            <span style="font-family:'Oswald';font-size:14px;font-weight:700;color:#0B2345;display:flex;align-items:center;gap:6px;">
-              <span class="material-symbols-outlined" style="color:#C89B3C;font-size:18px;">${meta.icon}</span>
-              ${meta.name}
-            </span>
-            <span class="badge badge-green" style="font-size:9px;font-weight:700;">In Progress</span>
-          </div>
-          <div style="font-size:11px;color:#64748b;display:flex;align-items:center;gap:4px;margin-bottom:8px;">
-            <span class="material-symbols-outlined" style="font-size:13px;color:#94a3b8;">schedule</span>
-            ${meta.schedule}
-          </div>
-        </div>
-        <div>
-          <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;">
-            <span style="color:#64748b;">Enrolled Cadets: <strong style="color:#0B2345;">${meta.cadets}</strong></span>
-            <span style="font-weight:700;color:#C89B3C;">${meta.progress}% Syllabus</span>
-          </div>
-          <div class="progress-bar" style="height:6px;width:100%;">
-            <div class="progress-fill" style="width:${meta.progress}%;background:#C89B3C;"></div>
-          </div>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  // Checkboxes for toggling batches
-  const bCheckboxes = document.getElementById('fd-batch-checkboxes');
-  bCheckboxes.innerHTML = ALL_ACADEMY_BATCHES.map(b => {
-    const isAssigned = activeBatches.some(ab => ab.toLowerCase() === b.name.toLowerCase());
-    return `
-      <label style="display:flex;align-items:center;gap:6px;background:#fff;padding:6px 12px;border:1.5px solid ${isAssigned ? '#C89B3C' : '#cbd5e1'};border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;color:#0B2345;">
-        <input type="checkbox" name="fd-batch-chk" value="${b.name}" ${isAssigned ? 'checked' : ''} style="width:16px;height:16px;accent-color:#0B2345;cursor:pointer;">
-        <span>${b.name}</span>
-      </label>
-    `;
-  }).join('');
-
-  // 2. Render Subjects
-  const activeSubjects = getFacultySubjects(f);
-  document.getElementById('fd-subject-count-badge').textContent = `${activeSubjects.length} Subject${activeSubjects.length > 1 ? 's' : ''}`;
-
-  const sContainer = document.getElementById('fd-subjects-container');
-  sContainer.innerHTML = activeSubjects.map(sName => {
-    const meta = ALL_ACADEMY_SUBJECTS.find(s => s.name.toLowerCase() === sName.toLowerCase()) || {
-      name: sName, course: 'IMU-CET', icon: 'menu_book', desc: 'Maritime Academic Discipline'
-    };
-    const isSpon = meta.course.toLowerCase().includes('sponsorship');
-    return `
-      <div style="padding:14px;background:#fff;border:1.5px solid #e2e8f0;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-          <div style="font-family:'Oswald';font-size:14px;font-weight:700;color:#0B2345;display:flex;align-items:center;gap:6px;">
-            <span class="material-symbols-outlined" style="color:#C89B3C;font-size:18px;">${meta.icon}</span>
-            ${meta.name}
-          </div>
-          <span class="badge ${isSpon ? 'badge-gold' : 'badge-navy'}" style="font-size:9px;font-weight:700;">${meta.course}</span>
-        </div>
-        <div style="font-size:11px;color:#64748b;line-height:1.4;">
-          ${meta.desc}
-        </div>
-        <div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;font-size:10px;color:#94a3b8;display:flex;justify-content:space-between;">
-          <span>Mode: Live Online + Lab</span>
-          <span style="font-weight:600;color:#16a34a;">Active Assigned</span>
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  // Checkboxes for toggling subjects
-  const sCheckboxes = document.getElementById('fd-subject-checkboxes');
-  sCheckboxes.innerHTML = ALL_ACADEMY_SUBJECTS.map(s => {
-    const isAssigned = activeSubjects.some(as => as.toLowerCase() === s.name.toLowerCase());
-    return `
-      <label style="display:flex;align-items:center;gap:6px;background:#fff;padding:6px 12px;border:1.5px solid ${isAssigned ? '#C89B3C' : '#cbd5e1'};border-radius:8px;cursor:pointer;font-size:12px;font-weight:600;color:#0B2345;">
-        <input type="checkbox" name="fd-subj-chk" value="${s.name}" ${isAssigned ? 'checked' : ''} style="width:16px;height:16px;accent-color:#0B2345;cursor:pointer;">
-        <span>${s.name} <small style="color:#64748b;">(${s.course})</small></span>
-      </label>
-    `;
-  }).join('');
-
-  // 3. Render Schedule Preview
-  const schedContainer = document.getElementById('fd-schedule-container');
-  const scheduleSlots = [
-    { day: 'Monday, Wednesday, Friday', time: '10:00 AM – 11:30 AM', batch: activeBatches[0] || 'Winter Batch', subject: activeSubjects[0] || 'Nautical Science', room: 'Radar Simulation Lab / Google Meet' },
-    ...(activeBatches.length > 1 ? [{ day: 'Tuesday, Thursday', time: '02:00 PM – 04:00 PM', batch: activeBatches[1] || 'Batch Alpha', subject: activeSubjects[1] || activeSubjects[0] || 'COLREGs & Navigation Viva', room: 'Navigational Chartroom' }] : []),
-    ...(activeBatches.length > 2 ? [{ day: 'Saturday', time: '09:30 AM – 12:30 PM', batch: activeBatches[2] || 'Batch Bravo', subject: activeSubjects[0] || 'Nautical Science', room: 'Main Lecture Hall B' }] : [])
-  ];
-
-  schedContainer.innerHTML = scheduleSlots.map(slot => `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;font-size:12px;flex-wrap:wrap;gap:8px;">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <span class="material-symbols-outlined" style="color:#0B2345;font-size:18px;">schedule</span>
-        <div>
-          <strong style="color:#0B2345;">${slot.day}</strong>
-          <div style="font-size:11px;color:#64748b;">${slot.time} · <span style="color:#0B2345;font-weight:600;">${slot.room}</span></div>
-        </div>
-      </div>
-      <div style="display:flex;align-items:center;gap:6px;">
-        <span class="badge badge-navy" style="font-size:10px;">${slot.batch}</span>
-        <span class="badge badge-gold" style="font-size:10px;">${slot.subject}</span>
-      </div>
-    </div>
-  `).join('');
-
-  openModal('modal-faculty-detail');
-}
-
-function saveFacultyDetailAssignments() {
-  const facultyId = document.getElementById('fd-faculty-id').value;
-  const f = appFaculty.find(x => String(x.id) === String(facultyId));
-  if (!f) return;
-
-  // Read selected batches
-  const selectedBatches = Array.from(document.querySelectorAll('input[name="fd-batch-chk"]:checked')).map(el => el.value);
-  if (selectedBatches.length === 0) {
-    toast('Please assign at least one training batch to this faculty member', '#dc2626');
-    return;
-  }
-
-  // Read selected subjects
-  const selectedSubjects = Array.from(document.querySelectorAll('input[name="fd-subj-chk"]:checked')).map(el => el.value);
-  if (selectedSubjects.length === 0) {
-    toast('Please assign at least one subject to this faculty member', '#dc2626');
-    return;
-  }
-
-  f.batches = selectedBatches;
-  f.batch = selectedBatches[0];
-  f.subjects = selectedSubjects;
-  f.subject = selectedSubjects[0];
-
-  // Persist locally
+function getAcademyBatches() {
   try {
-    localStorage.setItem('sindhupath_saved_faculty', JSON.stringify(appFaculty));
+    const raw = localStorage.getItem('sp_academy_batches');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        ALL_ACADEMY_BATCHES = parsed;
+        return parsed;
+      }
+    }
   } catch(e) {}
-
-  // Sync to Supabase if client is available
-  if (typeof sbClient !== 'undefined' && sbClient) {
-    sbClient.from('faculty').update({
-      batches: f.batches,
-      subject: f.subject
-    }).eq('id', f.id).then(res => {
-      console.log('Synced faculty assignments to Supabase:', res);
-    }).catch(e => console.warn('Supabase update note:', e));
-  }
-
-  toast(`✓ Updated ${f.name} teaching roster: ${selectedBatches.length} Batches, ${selectedSubjects.length} Subjects`, '#16a34a');
-  renderFaculty();
-  openFacultyDetailModal(f.id); // Refresh detail modal contents
+  return ALL_ACADEMY_BATCHES;
 }
 
-function editFacultyProfile(facultyId) {
+function saveAcademyBatches(batches) {
+  ALL_ACADEMY_BATCHES = batches;
+  try {
+    localStorage.setItem('sp_academy_batches', JSON.stringify(batches));
+  } catch(e) {}
+  populateAllBatchDropdowns();
+}
+
+function saveNewBatch() {
+  const name = document.getElementById('nb-name')?.value.trim();
+  const code = document.getElementById('nb-code')?.value.trim() || `B-${Date.now().toString().slice(-4)}`;
+  const target = document.getElementById('nb-target')?.value.trim() || 'IMU-CET / DNS Entrance';
+  const start = document.getElementById('nb-start')?.value || '';
+  const desc = document.getElementById('nb-desc')?.value.trim() || '';
+
+  if (!name) {
+    toast('Please enter a batch name', '#dc2626');
+    return;
+  }
+
+  const batches = getAcademyBatches();
+  if (batches.some(b => b.name.toLowerCase() === name.toLowerCase())) {
+    toast(`A batch named "${name}" already exists`, '#dc2626');
+    return;
+  }
+
+  const newB = {
+    id: 'batch_' + Date.now(),
+    name,
+    code,
+    target,
+    cadets: 0,
+    progress: 0,
+    schedule: desc || 'Schedule TBD',
+    created_at: new Date().toISOString()
+  };
+
+  batches.push(newB);
+  saveAcademyBatches(batches);
+  closeModal('modal-add-batch');
+  toast(`✓ Created new batch: "${name}"`, '#16a34a');
+  
+  // Switch to new batch in Courses view
+  switchAdminCoursesBatch(name);
+}
+
+function switchAdminCoursesBatch(batchName) {
+  currentActiveCoursesBatch = batchName;
+  const bSelect = document.getElementById('courses-active-batch-select');
+  if (bSelect) bSelect.value = batchName;
+
+  const batch = getAcademyBatches().find(b => b.name === batchName) || { target: 'IMU-CET / Sponsorship', cadets: 0 };
+  const targetTxt = document.getElementById('courses-batch-target-txt');
+  if (targetTxt) targetTxt.textContent = batch.target || 'IMU-CET June 2026';
+
+  renderAdminCoursesMainView();
+}
+
+function populateAllBatchDropdowns() {
+  const batches = getAcademyBatches();
+  const batchNames = batches.map(b => b.name);
+
+  // 1. Courses tab active batch select
+  const cbSel = document.getElementById('courses-active-batch-select');
+  if (cbSel) {
+    cbSel.innerHTML = batchNames.map(name => `<option value="${name}" ${name === currentActiveCoursesBatch ? 'selected' : ''}>${name}</option>`).join('');
+  }
+
+  // 2. Add Student modal batch select
+  const sbSel = document.getElementById('s-batch');
+  if (sbSel) {
+    const curVal = sbSel.value;
+    sbSel.innerHTML = batchNames.map(name => `<option value="${name}" ${name === curVal ? 'selected' : ''}>${name}</option>`).join('');
+  }
+
+  // 3. Enroll Student modal batch select
+  const mesSel = document.getElementById('mes-batch');
+  if (mesSel) {
+    const curVal = mesSel.value;
+    mesSel.innerHTML = batchNames.map(name => `<option value="${name}" ${name === curVal ? 'selected' : ''}>${name}</option>`).join('');
+  }
+
+  // 4. Assign faculty modal batch select
+  const afbSel = document.getElementById('af-batch-select');
+  if (afbSel) {
+    afbSel.innerHTML = batchNames.map(name => `<option value="${name}">${name}</option>`).join('');
+  }
+
+  // 5. Faculty detail assign batch select
+  const fdbSel = document.getElementById('fd-assign-batch-select');
+  if (fdbSel) {
+    fdbSel.innerHTML = batchNames.map(name => `<option value="${name}">${name}</option>`).join('');
+  }
+}
+
+// ── INDIVIDUAL STUDENT COURSE ACCESS STATE CONTROLLERS ──
+let currentEnrollStudentAccess = { 'imu-cet': 'unlocked', 'sponsorship-prep': 'locked' };
+let currentAddStudentAccess = { 'imu-cet': 'unlocked', 'sponsorship-prep': 'locked' };
+
+function selectCourseAccess(courseId, accessLevel, prefix) {
+  const targetObj = prefix === 'mes' ? currentEnrollStudentAccess : currentAddStudentAccess;
+  targetObj[courseId] = accessLevel;
+  updateCourseAccessButtonsUI(courseId, accessLevel, prefix);
+}
+
+function updateCourseAccessButtonsUI(courseId, accessLevel, prefix) {
+  const isImu = courseId === 'imu-cet';
+  const idPrefix = `${prefix}-btn-${isImu ? 'imu' : 'spon'}`;
+
+  ['unlocked', 'locked', 'hidden'].forEach(lvl => {
+    const btn = document.getElementById(`${idPrefix}-${lvl}`);
+    if (btn) {
+      if (lvl === accessLevel) {
+        btn.className = `access-btn active-${lvl}`;
+      } else {
+        btn.className = 'access-btn';
+      }
+    }
+  });
+}
+
+function renderStudentCourseAccessBadges(s) {
+  const access = s.courseAccess || {
+    'imu-cet': 'unlocked',
+    'sponsorship-prep': (s.courses && s.courses.some(c => c.toLowerCase().includes('sponsorship'))) || (s.course && s.course.toLowerCase().includes('sponsorship')) ? 'unlocked' : 'locked'
+  };
+
+  const badges = [];
+
+  // If student has a specific custom track (like DNS Deck Cadet)
+  if (s.course && !s.course.toLowerCase().includes('imu') && !s.course.toLowerCase().includes('sponsorship')) {
+    badges.push(`<span class="badge badge-navy" style="font-size:11px;padding:2px 7px;display:inline-flex;align-items:center;gap:4px;" title="Enrolled Track"><span class="iconify" data-icon="lucide:book-open" style="font-size:12px;"></span> ${s.course}</span>`);
+  }
+  
+  // IMU-CET badge
+  if (access['imu-cet'] === 'unlocked') {
+    badges.push(`<span class="badge" style="background:#dcfce7;color:#166534;border:1px solid #86efac;font-size:11px;padding:2px 7px;display:inline-flex;align-items:center;gap:4px;" title="IMU-CET: Unlocked (Full Access)"><span class="iconify" data-icon="lucide:unlock" style="font-size:12px;"></span> IMU-CET</span>`);
+  } else if (access['imu-cet'] === 'locked') {
+    badges.push(`<span class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d;font-size:11px;padding:2px 7px;display:inline-flex;align-items:center;gap:4px;" title="IMU-CET: Locked (Marketing CTA)"><span class="iconify" data-icon="lucide:lock" style="font-size:12px;"></span> IMU-CET</span>`);
+  } else {
+    // Hidden
+    badges.push(`<span class="badge" style="background:#f1f5f9;color:#94a3b8;border:1px solid #e2e8f0;font-size:10px;padding:2px 5px;display:inline-flex;align-items:center;gap:3px;" title="IMU-CET: Hidden from cadet"><span class="iconify" data-icon="lucide:eye-off" style="font-size:11px;"></span> IMU Hidden</span>`);
+  }
+
+  // Sponsorship Prep badge
+  if (access['sponsorship-prep'] === 'unlocked') {
+    badges.push(`<span class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d;font-size:11px;padding:2px 7px;font-weight:700;display:inline-flex;align-items:center;gap:4px;" title="Sponsorship Prep: Unlocked (Full Access)"><span class="iconify" data-icon="lucide:unlock" style="font-size:12px;"></span> Sponsorship</span>`);
+  } else if (access['sponsorship-prep'] === 'locked') {
+    badges.push(`<span class="badge" style="background:#f8fafc;color:#d97706;border:1px dashed #fcd34d;font-size:11px;padding:2px 7px;display:inline-flex;align-items:center;gap:4px;" title="Sponsorship Prep: Locked (Marketing CTA)"><span class="iconify" data-icon="lucide:lock" style="font-size:12px;"></span> Sponsorship</span>`);
+  } else {
+    // Hidden
+    badges.push(`<span class="badge" style="background:#f1f5f9;color:#94a3b8;border:1px solid #e2e8f0;font-size:10px;padding:2px 5px;display:inline-flex;align-items:center;gap:3px;" title="Sponsorship Prep: Hidden from cadet"><span class="iconify" data-icon="lucide:eye-off" style="font-size:11px;"></span> Spon. Hidden</span>`);
+  }
+
+  return `<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">${badges.join('')}</div>`;
+}
+
+// ── ASSIGN FACULTY TO SUBJECT (COURSES TAB MODAL) ──
+function updateAssignFacultySubjects() {
+  const course = document.getElementById('af-course-select')?.value || 'imu-cet';
+  const subjSelect = document.getElementById('af-subject-select');
+  if (!subjSelect) return;
+
+  const subjects = course === 'imu-cet'
+    ? ['Mathematics', 'Physics', 'Chemistry', 'English', 'Aptitude & Reasoning', 'General Knowledge', 'Nautical Science']
+    : ['Technical Viva & COLREGs', 'Maritime HR & Behavioral Interview', 'Shipping Fleet & Past Papers'];
+
+  subjSelect.innerHTML = subjects.map(s => `<option value="${s}">${s}</option>`).join('');
+
+  // Populate faculty select
+  const facSelect = document.getElementById('af-faculty-select');
+  if (facSelect) {
+    facSelect.innerHTML = appFaculty.map(f => `<option value="${f.id}">${f.name || f.full_name} (${f.designation || 'Instructor'})`).join('');
+  }
+}
+
+function confirmAssignFaculty() {
+  const batch = document.getElementById('af-batch-select')?.value || 'Winter Batch';
+  const course = document.getElementById('af-course-select')?.value === 'imu-cet' ? 'IMU-CET' : 'Sponsorship Prep';
+  const subject = document.getElementById('af-subject-select')?.value || 'Mathematics';
+  const facultyId = document.getElementById('af-faculty-select')?.value;
+
   const f = appFaculty.find(x => String(x.id) === String(facultyId));
-  if (!f) return;
-  closeModal('modal-faculty-detail');
-  
-  // Pre-fill modal-add-faculty in edit mode
-  document.getElementById('f-name').value = f.name || f.full_name || '';
-  document.getElementById('f-id').value = f.id || '';
-  document.getElementById('f-designation').value = f.designation || 'Instructor';
-  document.getElementById('f-subject').value = f.subject || 'Nautical Science';
-  document.getElementById('f-qual').value = f.qualification || '';
-  document.getElementById('f-exp').value = f.experience || '5';
-  document.getElementById('f-mobile').value = f.mobile || '';
-  document.getElementById('f-status').value = f.status || 'Active';
-  if (document.getElementById('f-email')) document.getElementById('f-email').value = f.email || '';
-  
-  openModal('modal-add-faculty');
+  if (!f) { toast('Please select an instructor', '#dc2626'); return; }
+
+  if (!Array.isArray(f.assignments)) f.assignments = [];
+  const exists = f.assignments.some(a => a.batch === batch && a.course === course && a.subject === subject);
+  if (!exists) {
+    f.assignments.push({ batch, course, subject });
+    try { localStorage.setItem('sindhupath_saved_faculty', JSON.stringify(appFaculty)); } catch(e) {}
+  }
+
+  closeModal('modal-assign-faculty');
+  toast(`✓ Assigned ${f.name} to ${subject} in ${batch}`, '#16a34a');
+  renderFaculty();
+}
+
+// ── FACULTY MULTI-BATCH ASSIGNMENTS CONTROLLER ──
+function getFacultyAssignments(f) {
+  if (Array.isArray(f.assignments) && f.assignments.length > 0) return f.assignments;
+  // Initialize default assignments for legacy records
+  const primarySubj = f.subject || 'Nautical Science';
+  return [
+    { batch: 'Winter Batch', course: 'IMU-CET', subject: primarySubj },
+    { batch: 'Batch Bravo', course: 'IMU-CET', subject: primarySubj }
+  ];
+}
+
+function updateFdAssignCourses() {
+  updateFdAssignSubjects();
+}
+
+function updateFdAssignSubjects() {
+  const course = document.getElementById('fd-assign-course-select')?.value || 'imu-cet';
+  const subjSelect = document.getElementById('fd-assign-subj-select');
+  if (!subjSelect) return;
+
+  const subjects = course === 'imu-cet'
+    ? ['Nautical Science', 'Mathematics', 'Physics', 'Chemistry', 'English', 'Aptitude & Reasoning', 'General Knowledge']
+    : ['Technical Viva & COLREGs', 'Maritime HR & Behavioral Interview', 'Shipping Fleet & Past Papers'];
+
+  subjSelect.innerHTML = subjects.map(s => `<option value="${s}">${s}</option>`).join('');
+}
+
+let activeFacultyDraftAssignments = [];
+
+function renderFdAssignmentsUI() {
+  const container = document.getElementById('fd-assignments-container');
+  if (!container) return;
+
+  document.getElementById('fd-assignments-count-badge').textContent = `${activeFacultyDraftAssignments.length} Assignment${activeFacultyDraftAssignments.length !== 1 ? 's' : ''} Active`;
+
+  if (activeFacultyDraftAssignments.length === 0) {
+    container.innerHTML = '<div style="padding:16px;text-align:center;color:#64748b;background:#f8fafc;border-radius:10px;">No teaching assignments yet. Use the builder below to assign a batch and subject.</div>';
+    return;
+  }
+
+  // Group by Batch
+  const byBatch = {};
+  activeFacultyDraftAssignments.forEach((a, idx) => {
+    if (!byBatch[a.batch]) byBatch[a.batch] = [];
+    byBatch[a.batch].push({ ...a, originalIndex: idx });
+  });
+
+  container.innerHTML = Object.keys(byBatch).map(batchName => {
+    const items = byBatch[batchName];
+    return `
+      <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:12px 14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-family:'Oswald';font-size:14px;font-weight:700;color:#0B2345;display:flex;align-items:center;gap:6px;">
+            <span class="material-symbols-outlined" style="color:#C89B3C;font-size:18px;">groups_2</span>
+            ${batchName}
+          </span>
+          <span class="badge badge-navy" style="font-size:10px;">${items.length} Subject${items.length > 1 ? 's' : ''}</span>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          ${items.map(item => `
+            <div style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #cbd5e1;padding:4px 8px;border-radius:8px;font-size:12px;font-weight:600;color:#0B2345;">
+              <span class="badge ${item.course.toLowerCase().includes('spon') ? 'badge-gold' : 'badge-navy'}" style="font-size:9px;padding:1px 5px;">${item.course}</span>
+              <span>${item.subject}</span>
+              <button type="button" onclick="removeFacultyAssignment(${item.originalIndex})" style="border:none;background:none;color:#94a3b8;cursor:pointer;display:flex;align-items:center;padding:0 2px;" title="Remove this assignment" onmouseenter="this.style.color='#ef4444'" onmouseleave="this.style.color='#94a3b8'">
+                <span class="material-symbols-outlined" style="font-size:14px;">close</span>
+              </button>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function addAssignmentToCurrentFaculty() {
+  const batch = document.getElementById('fd-assign-batch-select')?.value || 'Winter Batch';
+  const course = document.getElementById('fd-assign-course-select')?.value === 'imu-cet' ? 'IMU-CET' : 'Sponsorship Prep';
+  const subject = document.getElementById('fd-assign-subj-select')?.value || 'Nautical Science';
+
+  const already = activeFacultyDraftAssignments.some(a => a.batch === batch && a.course === course && a.subject === subject);
+  if (already) {
+    toast('This faculty member is already assigned to this subject in ' + batch, '#d97706');
+    return;
+  }
+
+  activeFacultyDraftAssignments.push({ batch, course, subject });
+  renderFdAssignmentsUI();
+  toast(`+ Added ${subject} (${batch})`, '#16a34a');
+}
+
+function removeFacultyAssignment(index) {
+  if (index >= 0 && index < activeFacultyDraftAssignments.length) {
+    const removed = activeFacultyDraftAssignments.splice(index, 1)[0];
+    renderFdAssignmentsUI();
+    toast(`Removed ${removed.subject} assignment`, '#64748b');
+  }
 }
 
 function applyFacultyFilters() {
@@ -4329,7 +4727,7 @@ function renderAdminCoursesMainView() {
               </div>
               <div>
                 <p style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;">Active Batch</p>
-                <p style="font-weight:700;color:#16a34a;margin-top:2px;">Winter Batch</p>
+                <p style="font-weight:700;color:#16a34a;margin-top:2px;">${currentActiveCoursesBatch}</p>
               </div>
               <div>
                 <p style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;">Curriculum</p>
