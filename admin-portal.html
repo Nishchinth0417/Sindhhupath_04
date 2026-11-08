@@ -1054,8 +1054,7 @@
           <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:20px;margin-bottom:28px;" id="admin-courses-cards-grid">
             <!-- Populated dynamically by renderAdminCoursesMainView() -->
           </div>
-
-          
+        </div>
 
         <!-- ════════════════ LEVEL 2: COURSE SUBJECTS HUB VIEW ════════════════ -->
         <div id="admin-course-hub-view" style="display:none;margin-bottom:28px;">
@@ -1065,64 +1064,6 @@
         <!-- ════════════════ LEVEL 3: SUBJECT 3-MODULE DRILLDOWN VIEW ════════════════ -->
         <div id="admin-subject-view" style="display:none;margin-bottom:28px;">
           <!-- Populated dynamically by renderAdminSubjectView() -->
-        </div>
-
-        <!-- DNS Sponsorship Companies & Question Papers Authority Control -->
-        <div class="card" style="margin-top:28px;border:1.5px solid #e2e8f0;background:#fff;box-shadow:0 2px 8px rgba(11,35,69,0.04);">
-          <div class="card-header" style="background:#f8fafc;flex-wrap:wrap;gap:12px;padding:16px 20px;">
-            <div>
-              <div style="font-family:'Oswald';font-size:16px;font-weight:600;color:#0B2345;display:flex;align-items:center;gap:8px;">
-                <span class="material-symbols-outlined" style="color:#C89B3C;font-size:20px;">sailing</span>
-                Sponsorship Prep &amp; Question Banks Authority
-              </div>
-              <div style="font-size:12px;color:#64748b;margin-top:3px;">
-                Manage global shipping lines, operational fleet statistics, company histories, and past entrance question papers displayed to cadets.
-              </div>
-            </div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              <button class="btn btn-sm btn-outline" onclick="adminOpenAddInterviewPdfModal()" style="font-size:12px;">
-                <span class="material-symbols-outlined" style="font-size:15px;color:#0f766e;">picture_as_pdf</span> ➕ Add Interview PDF
-              </button>
-              <button class="btn btn-sm btn-outline" onclick="adminOpenAddCommonQuestionModal()" style="font-size:12px;">
-                <span class="material-symbols-outlined" style="font-size:15px;color:#d97706;">fact_check</span> ➕ Add Common Question
-              </button>
-              <button class="btn btn-gold btn-sm" onclick="openAddCompanyModal()" style="font-size:12px;">
-                <span class="material-symbols-outlined" style="font-size:15px;">add_business</span> ➕ Add Shipping Company
-              </button>
-            </div>
-          </div>
-          <div style="padding:18px 20px;" id="admin-sponsorship-companies-list">
-            <!-- Populated by renderAdminSponsorshipCompanies() -->
-          </div>
-        </div>
-
-        <!-- Sunday Mock Viva & Interviewer Availability Authority Control -->
-        <div class="card" style="margin-top:28px;border:1.5px solid #e2e8f0;background:#fff;box-shadow:0 2px 8px rgba(11,35,69,0.04);">
-          <div class="card-header" style="background:#f8fafc;flex-wrap:wrap;gap:12px;padding:16px 20px;">
-            <div>
-              <div style="font-family:'Oswald';font-size:16px;font-weight:600;color:#0B2345;display:flex;align-items:center;gap:8px;">
-                <span class="material-symbols-outlined" style="color:#0f766e;font-size:20px;">record_voice_over</span>
-                Sunday Mock Viva &amp; Interviewer Availability Authority
-              </div>
-              <div style="font-size:12px;color:#64748b;margin-top:3px;">
-                Manage the upcoming Sunday 1-on-1 viva session confirmation, handle cancellations if interviewers are called for shipboard/pilotage duties, and broadcast 48-hour prior notices.
-              </div>
-            </div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              <button class="btn btn-sm" style="background:#16a34a;color:#fff;" onclick="adminSetVivaStatus('confirmed')">
-                <span class="material-symbols-outlined" style="font-size:15px;">check_circle</span> Confirm Sunday Session
-              </button>
-              <button class="btn btn-sm" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d;" onclick="adminSetVivaStatus('pending')">
-                <span class="material-symbols-outlined" style="font-size:15px;">hourglass_top</span> Set to Pending (48h Notice)
-              </button>
-              <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;" onclick="adminPromptCancelViva()">
-                <span class="material-symbols-outlined" style="font-size:15px;">cancel</span> Cancel / Postpone Session
-              </button>
-            </div>
-          </div>
-          <div style="padding:18px 20px;" id="admin-viva-status-display">
-            <!-- Populated by renderAdminVivaStatus() -->
-          </div>
         </div>
       </div>
 
@@ -4659,10 +4600,11 @@ const ADMIN_MOCK_TESTS = {
 
 // ── LEVEL 1: RENDER COURSES CATALOG ──
 function renderCourses() {
-  // renderAdminCourseLocks(); (removed)
-  renderAdminSponsorshipCompanies();
-  renderAdminVivaStatus();
   renderAdminCoursesMainView();
+  if (currentAdminCourseId === 'sponsorship-prep') {
+    renderAdminSponsorshipCompanies();
+    renderAdminVivaStatus();
+  }
 }
 
 
@@ -4795,7 +4737,7 @@ function renderAdminCoursesMainView() {
 
           <div>
             <button onclick="adminOpenCourseHub('${c.id}')" class="btn btn-navy" style="width:100%;justify-content:center;padding:10px 16px;border-radius:10px;font-family:'Oswald';letter-spacing:1px;font-size:14px;box-shadow:0 2px 6px rgba(11,35,69,0.15);">
-              VIEW DETAILS
+              ${c.id === 'sponsorship-prep' ? 'VIEW DETAILS &amp; QUESTION BANKS' : 'VIEW DETAILS'}
             </button>
           </div>
         </div>
@@ -4839,6 +4781,7 @@ function renderAdminCourseHub() {
 
   const course = ADMIN_COURSES_CATALOG.find(c => c.id === currentAdminCourseId) || ADMIN_COURSES_CATALOG[0];
   const subjects = ADMIN_SUBJECTS_CATALOG[course.id] || [];
+  const isSponsorship = course.id === 'sponsorship-prep';
 
   hubView.innerHTML = `
     <!-- Breadcrumb & Top Bar -->
@@ -4858,7 +4801,7 @@ function renderAdminCourseHub() {
       <div style="display:flex;align-items:center;gap:8px;">
         <span class="badge" style="background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;font-weight:700;font-size:11px;display:flex;align-items:center;gap:6px;">
           <span style="width:7px;height:7px;border-radius:50%;background:#22c55e;"></span>
-          Winter Batch Active
+          ${currentActiveCoursesBatch || 'Winter Batch'} Active
         </span>
       </div>
     </div>
@@ -4888,11 +4831,11 @@ function renderAdminCourseHub() {
           </div>
           <div>
             <p style="color:#94a3b8;font-size:10px;text-transform:uppercase;font-weight:700;">Active Cohort</p>
-            <p style="font-weight:700;color:#fff;font-size:15px;margin-top:2px;">Winter Batch</p>
+            <p style="font-weight:700;color:#fff;font-size:15px;margin-top:2px;">${currentActiveCoursesBatch || 'Winter Batch'}</p>
           </div>
           <div>
             <p style="color:#94a3b8;font-size:10px;text-transform:uppercase;font-weight:700;">Curriculum Mode</p>
-            <p style="font-weight:700;color:#38bdf8;font-size:15px;margin-top:2px;">3-Section Modular</p>
+            <p style="font-weight:700;color:#38bdf8;font-size:15px;margin-top:2px;">${isSponsorship ? 'Specialization & Question Banks' : '6 Core Modular'}</p>
           </div>
         </div>
       </div>
@@ -4915,7 +4858,7 @@ function renderAdminCourseHub() {
     </div>
 
     <!-- Subjects Cards Grid -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;${isSponsorship ? 'margin-bottom:28px;' : ''}">
       ${subjects.map((s, idx) => {
         const matCount = (ADMIN_MOCK_MATERIALS[s.key] || []).length;
         const classCount = (ADMIN_MOCK_CLASSES[s.key] || []).length;
@@ -4961,7 +4904,72 @@ function renderAdminCourseHub() {
         `;
       }).join('')}
     </div>
+
+    ${isSponsorship ? `
+    <!-- ════════════════ SPONSORSHIP PREP & QUESTION BANKS AUTHORITY ════════════════ -->
+    <div class="card" style="margin-top:28px;border:1.5px solid #e2e8f0;background:#fff;box-shadow:0 2px 8px rgba(11,35,69,0.04);">
+      <div class="card-header" style="background:#f8fafc;flex-wrap:wrap;gap:12px;padding:16px 20px;">
+        <div>
+          <div style="font-family:'Oswald';font-size:16px;font-weight:600;color:#0B2345;display:flex;align-items:center;gap:8px;">
+            <span class="material-symbols-outlined" style="color:#C89B3C;font-size:20px;">sailing</span>
+            Sponsorship Prep &amp; Question Banks Authority
+          </div>
+          <div style="font-size:12px;color:#64748b;margin-top:3px;">
+            Manage global shipping lines, operational fleet statistics, company histories, and past entrance question papers displayed to cadets.
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-sm btn-outline" onclick="adminOpenAddInterviewPdfModal()" style="font-size:12px;">
+            <span class="material-symbols-outlined" style="font-size:15px;color:#0f766e;">picture_as_pdf</span> ➕ Add Interview PDF
+          </button>
+          <button class="btn btn-sm btn-outline" onclick="adminOpenAddCommonQuestionModal()" style="font-size:12px;">
+            <span class="material-symbols-outlined" style="font-size:15px;color:#d97706;">fact_check</span> ➕ Add Common Question
+          </button>
+          <button class="btn btn-gold btn-sm" onclick="openAddCompanyModal()" style="font-size:12px;">
+            <span class="material-symbols-outlined" style="font-size:15px;">add_business</span> ➕ Add Shipping Company
+          </button>
+        </div>
+      </div>
+      <div style="padding:18px 20px;" id="admin-sponsorship-companies-list">
+        <!-- Populated by renderAdminSponsorshipCompanies() -->
+      </div>
+    </div>
+
+    <!-- Sunday Mock Viva & Interviewer Availability Authority Control -->
+    <div class="card" style="margin-top:28px;border:1.5px solid #e2e8f0;background:#fff;box-shadow:0 2px 8px rgba(11,35,69,0.04);">
+      <div class="card-header" style="background:#f8fafc;flex-wrap:wrap;gap:12px;padding:16px 20px;">
+        <div>
+          <div style="font-family:'Oswald';font-size:16px;font-weight:600;color:#0B2345;display:flex;align-items:center;gap:8px;">
+            <span class="material-symbols-outlined" style="color:#0f766e;font-size:20px;">record_voice_over</span>
+            Sunday Mock Viva &amp; Interviewer Availability Authority
+          </div>
+          <div style="font-size:12px;color:#64748b;margin-top:3px;">
+            Manage the upcoming Sunday 1-on-1 viva session confirmation, handle cancellations if interviewers are called for shipboard/pilotage duties, and broadcast 48-hour prior notices.
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-sm" style="background:#16a34a;color:#fff;" onclick="adminSetVivaStatus('confirmed')">
+            <span class="material-symbols-outlined" style="font-size:15px;">check_circle</span> Confirm Sunday Session
+          </button>
+          <button class="btn btn-sm" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d;" onclick="adminSetVivaStatus('pending')">
+            <span class="material-symbols-outlined" style="font-size:15px;">hourglass_top</span> Set to Pending (48h Notice)
+          </button>
+          <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;" onclick="adminPromptCancelViva()">
+            <span class="material-symbols-outlined" style="font-size:15px;">cancel</span> Cancel / Postpone Session
+          </button>
+        </div>
+      </div>
+      <div style="padding:18px 20px;" id="admin-viva-status-display">
+        <!-- Populated by renderAdminVivaStatus() -->
+      </div>
+    </div>
+    ` : ''}
   `;
+
+  if (isSponsorship) {
+    renderAdminSponsorshipCompanies();
+    renderAdminVivaStatus();
+  }
 }
 
 // ── LEVEL 3: RENDER SUBJECT 3-MODULE DRILLDOWN ──
