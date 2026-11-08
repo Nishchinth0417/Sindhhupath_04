@@ -1683,22 +1683,6 @@
         </div>
       </div>
 
-      <!-- 3 Options Policy Control inside Student Enrollment Modal -->
-      <div style="margin-top:14px;padding:12px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;">
-        <div style="font-size:11px;color:#0B2345;font-weight:700;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">
-          <span style="display:flex;align-items:center;gap:4px;">
-            <span class="material-symbols-outlined" style="font-size:15px;color:#C89B3C;">visibility</span>
-            Non-Enrolled Visibility Policy
-          </span>
-          <span id="mes-policy-badge" style="font-size:10px;font-weight:700;color:#d97706;">🔒 Marketing Preview</span>
-        </div>
-        <p style="font-size:11px;color:#64748b;margin-bottom:8px;">Choose how Sponsorship Prep appears to cadets who are not enrolled in it:</p>
-        <select id="mes-course-policy" class="form-select" style="font-size:11px;padding:4px 8px;height:32px;width:100%;border-radius:6px;border:1px solid #cbd5e1;background:#fff;font-weight:600;color:#0B2345;" onchange="adminUpdateCoursePolicy('sponsorship-prep', this.value)">
-          <option value="locked">🔒 1. Show Locked (Marketing CTA)</option>
-          <option value="hidden">👁️ 2. Hide from Non-Enrolled</option>
-          <option value="open">🔓 3. Open / Unlocked for All</option>
-        </select>
-      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-enroll-student')">Cancel</button>
@@ -4613,13 +4597,8 @@ function getCoursePolicy(courseId) {
 }
 
 function syncPolicyUI() {
-  const policy = getCoursePolicy('sponsorship-prep');
-  const mesSel = document.getElementById('mes-course-policy');
-  if (mesSel) mesSel.value = policy;
-  const mesBadge = document.getElementById('mes-policy-badge');
-  if (mesBadge) {
-    mesBadge.textContent = policy === 'locked' ? '🔒 Marketing Preview' : policy === 'hidden' ? '👁️ Hidden' : '🔓 Open to All';
-    mesBadge.style.color = policy === 'locked' ? '#d97706' : policy === 'hidden' ? '#dc2626' : '#16a34a';
+  if (typeof renderAdminCourses === 'function') {
+    renderAdminCourses();
   }
 }
 
