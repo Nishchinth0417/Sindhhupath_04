@@ -169,9 +169,30 @@
       background: #fff; border-radius: 12px; padding: 18px 20px;
       border: 1px solid #e2e8f0; position: relative; overflow: hidden;
       box-shadow: 0 1px 4px rgba(0,0,0,.05);
-      transition: box-shadow .2s, transform .2s;
+      transition: box-shadow .2s, transform .2s, border-color .2s;
+      cursor: pointer;
+      user-select: none;
     }
-    .kpi-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,.1); transform: translateY(-2px); }
+    .kpi-card:hover {
+      box-shadow: 0 8px 24px rgba(11,35,69,.12);
+      transform: translateY(-3px);
+      border-color: #cbd5e1;
+    }
+    .kpi-card:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(11,35,69,.08);
+    }
+    .kpi-card .kpi-click-hint {
+      position: absolute; top: 12px; right: 14px;
+      color: #94a3b8; opacity: 0.5;
+      transition: opacity .2s, transform .2s, color .2s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .kpi-card:hover .kpi-click-hint {
+      opacity: 1;
+      transform: translateX(3px);
+      color: #0B2345;
+    }
     .kpi-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
     .kpi-value { font-family: 'Bebas Neue'; font-size: 34px; color: #0B2345; letter-spacing: 1px; }
     .kpi-label { font-size: 11px; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: .5px; }
@@ -601,10 +622,13 @@
           </div>
         </div>
 
-        <!-- KPI cards -->
+        <!-- KPI cards (Interactive & Clickable Navigation) -->
         <div class="kpi-grid">
-          <div class="kpi-card gold-top">
+          <div class="kpi-card gold-top" onclick="switchTab('students')" title="Click to view all enrolled students" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')switchTab('students')">
             <div class="kpi-accent" style="background:#C89B3C;"></div>
+            <div class="kpi-click-hint" title="Open Students Tab">
+              <span class="material-symbols-outlined" style="font-size:18px;">arrow_forward</span>
+            </div>
             <div class="kpi-icon" style="background:rgba(200,155,60,.12);">
               <span class="material-symbols-outlined" style="color:#C89B3C;">school</span>
             </div>
@@ -612,8 +636,12 @@
             <div class="kpi-label">Total Students</div>
             <div class="kpi-change" id="kpi-students-sub" style="color:#16a34a;">Live from Database</div>
           </div>
-          <div class="kpi-card">
+
+          <div class="kpi-card" onclick="switchTab('faculty')" title="Click to view faculty and instructors" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')switchTab('faculty')">
             <div class="kpi-accent" style="background:#2563eb;"></div>
+            <div class="kpi-click-hint" title="Open Faculty Tab">
+              <span class="material-symbols-outlined" style="font-size:18px;">arrow_forward</span>
+            </div>
             <div class="kpi-icon" style="background:rgba(37,99,235,.1);">
               <span class="material-symbols-outlined" style="color:#2563eb;">group</span>
             </div>
@@ -621,8 +649,12 @@
             <div class="kpi-label">Active Faculty</div>
             <div class="kpi-change" id="kpi-faculty-sub" style="color:#64748b;">Live from Database</div>
           </div>
-          <div class="kpi-card">
+
+          <div class="kpi-card" onclick="switchTab('admissions')" title="Click to view pending admissions" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')switchTab('admissions')">
             <div class="kpi-accent" style="background:#f59e0b;"></div>
+            <div class="kpi-click-hint" title="Open Admissions Tab">
+              <span class="material-symbols-outlined" style="font-size:18px;">arrow_forward</span>
+            </div>
             <div class="kpi-icon" style="background:rgba(245,158,11,.1);">
               <span class="material-symbols-outlined" style="color:#f59e0b;">assignment_ind</span>
             </div>
@@ -630,8 +662,12 @@
             <div class="kpi-label">Pending Admissions</div>
             <div class="kpi-change" id="kpi-admissions-sub" style="color:#f59e0b;">0 in review</div>
           </div>
-          <div class="kpi-card">
+
+          <div class="kpi-card" onclick="switchTab('fees')" title="Click to view fees and financial records" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')switchTab('fees')">
             <div class="kpi-accent" style="background:#16a34a;"></div>
+            <div class="kpi-click-hint" title="Open Fees Tab">
+              <span class="material-symbols-outlined" style="font-size:18px;">arrow_forward</span>
+            </div>
             <div class="kpi-icon" style="background:rgba(22,163,74,.1);">
               <span class="material-symbols-outlined" style="color:#16a34a;">payments</span>
             </div>
@@ -639,8 +675,12 @@
             <div class="kpi-label">Fees Collected</div>
             <div class="kpi-change" id="kpi-revenue-sub" style="color:#16a34a;">0 paid cadets</div>
           </div>
-          <div class="kpi-card">
+
+          <div class="kpi-card" onclick="switchTab('courses')" title="Click to view scheduled batches and courses catalog" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')switchTab('courses')">
             <div class="kpi-accent" style="background:#8b5cf6;"></div>
+            <div class="kpi-click-hint" title="Open Courses Tab">
+              <span class="material-symbols-outlined" style="font-size:18px;">arrow_forward</span>
+            </div>
             <div class="kpi-icon" style="background:rgba(139,92,246,.1);">
               <span class="material-symbols-outlined" style="color:#8b5cf6;">event</span>
             </div>
@@ -648,8 +688,12 @@
             <div class="kpi-label">Scheduled Batches</div>
             <div class="kpi-change" id="kpi-exams-sub" style="color:#64748b;">Active sessions</div>
           </div>
-          <div class="kpi-card">
+
+          <div class="kpi-card" onclick="switchTab('noticeboard')" title="Click to view notice board bulletins" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' ')switchTab('noticeboard')">
             <div class="kpi-accent" style="background:#06b6d4;"></div>
+            <div class="kpi-click-hint" title="Open Notice Board Tab">
+              <span class="material-symbols-outlined" style="font-size:18px;">arrow_forward</span>
+            </div>
             <div class="kpi-icon" style="background:rgba(6,182,212,.1);">
               <span class="material-symbols-outlined" style="color:#06b6d4;">campaign</span>
             </div>
@@ -1279,25 +1323,25 @@
           </div>
         </div>
 
-        <!-- Summary cards -->
+        <!-- Summary cards (Clickable Filters) -->
         <div class="three-col" style="margin-bottom:20px;">
-          <div class="kpi-card">
+          <div class="kpi-card" onclick="filterFeesByStatus('Paid')" title="Filter by Paid records" role="button" tabindex="0">
             <div class="kpi-accent" style="background:#16a34a;"></div>
             <div class="kpi-icon" style="background:rgba(22,163,74,.1);"><span class="material-symbols-outlined" style="color:#16a34a;">payments</span></div>
-            <div class="kpi-value">₹42.6L</div>
+            <div class="kpi-value" id="kpi-fees-total-paid">₹0</div>
             <div class="kpi-label">Total Collected</div>
           </div>
-          <div class="kpi-card">
+          <div class="kpi-card" onclick="filterFeesByStatus('Pending')" title="Filter by Pending records" role="button" tabindex="0">
             <div class="kpi-accent" style="background:#f59e0b;"></div>
             <div class="kpi-icon" style="background:rgba(245,158,11,.1);"><span class="material-symbols-outlined" style="color:#f59e0b;">schedule</span></div>
-            <div class="kpi-value">₹12.3L</div>
+            <div class="kpi-value" id="kpi-fees-total-pending">₹0</div>
             <div class="kpi-label">Pending</div>
           </div>
-          <div class="kpi-card">
+          <div class="kpi-card" onclick="filterFeesByStatus('')" title="Reset filter to view all records" role="button" tabindex="0">
             <div class="kpi-accent" style="background:#dc2626;"></div>
             <div class="kpi-icon" style="background:rgba(220,38,38,.1);"><span class="material-symbols-outlined" style="color:#dc2626;">warning</span></div>
-            <div class="kpi-value">₹3.8L</div>
-            <div class="kpi-label">Overdue</div>
+            <div class="kpi-value" id="kpi-fees-total-overdue">₹0</div>
+            <div class="kpi-label">Overdue / Total</div>
           </div>
         </div>
 
@@ -5865,6 +5909,12 @@ function applyFeeFilter() {
   if (!q) return appFees;
   return appFees.filter(f=>f.student.toLowerCase().includes(q)||f.course.toLowerCase().includes(q));
 }
+function filterFeesByStatus(status) {
+  const sel = document.getElementById('fees-filter-status');
+  if (sel) { sel.value = status; }
+  filterFees();
+}
+
 function filterFees() { renderFees(); }
 function openPayment(studentName) {
   currentPayStudent = studentName;
