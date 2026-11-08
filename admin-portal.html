@@ -2204,6 +2204,7 @@
       </button>
     </div>
     <div class="modal-body" style="max-height:calc(100vh - 180px);overflow-y:auto;">
+      <input type="hidden" id="pdf-id">
       <div class="form-group">
         <label class="form-label">Handbook Title *</label>
         <input class="form-input" id="pdf-title" placeholder="e.g. Technical Viva &amp; COLREGs Question Bank">
@@ -2235,7 +2236,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline btn-sm" onclick="closeModal('modal-add-interview-pdf')">Cancel</button>
-      <button class="btn btn-gold btn-sm" onclick="adminSaveInterviewPdfModal()">Add PDF Handbook</button>
+      <button class="btn btn-gold btn-sm" id="btn-save-interview-pdf" onclick="adminSaveInterviewPdfModal()">Add PDF Handbook</button>
     </div>
   </div>
 </div>
@@ -2250,6 +2251,7 @@
       </button>
     </div>
     <div class="modal-body" style="max-height:calc(100vh - 180px);overflow-y:auto;">
+      <input type="hidden" id="csq-id">
       <div class="form-grid">
         <div class="form-group">
           <label class="form-label">Category *</label>
@@ -2281,7 +2283,7 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-outline btn-sm" onclick="closeModal('modal-add-common-sponsorship-question')">Cancel</button>
-      <button class="btn btn-gold btn-sm" onclick="adminSaveCommonQuestionModal()">Save Common Question</button>
+      <button class="btn btn-gold btn-sm" id="btn-save-common-question" onclick="adminSaveCommonQuestionModal()">Save Common Question</button>
     </div>
   </div>
 </div>
@@ -6299,7 +6301,32 @@ function saveAdminCommonQuestions(list) {
   renderAdminSponsorshipCompanies();
 }
 
+function openEditInterviewPdfModal(pdfId) {
+  const list = getAdminInterviewPdfs();
+  const p = list.find(item => item.id === pdfId);
+  if (!p) return;
+  const titleEl = document.getElementById('modal-title-add-interview-pdf');
+  if (titleEl) titleEl.textContent = 'Edit Interview Question PDF Handbook';
+  const idEl = document.getElementById('pdf-id');
+  if (idEl) idEl.value = p.id;
+  const btnEl = document.getElementById('btn-save-interview-pdf');
+  if (btnEl) btnEl.textContent = 'Update PDF Handbook';
+  document.getElementById('pdf-title').value = p.title || '';
+  document.getElementById('pdf-category').value = p.category || '';
+  document.getElementById('pdf-pages').value = p.pages || '';
+  document.getElementById('pdf-size').value = p.size || '';
+  document.getElementById('pdf-filename').value = p.fileName || '';
+  document.getElementById('pdf-desc').value = p.description || '';
+  openModal('modal-add-interview-pdf');
+}
+
 function adminOpenAddInterviewPdfModal() {
+  const titleEl = document.getElementById('modal-title-add-interview-pdf');
+  if (titleEl) titleEl.textContent = 'Add Interview Question PDF Handbook';
+  const idEl = document.getElementById('pdf-id');
+  if (idEl) idEl.value = '';
+  const btnEl = document.getElementById('btn-save-interview-pdf');
+  if (btnEl) btnEl.textContent = 'Add PDF Handbook';
   document.getElementById('pdf-title').value = '';
   document.getElementById('pdf-category').value = 'Technical Navigation';
   document.getElementById('pdf-pages').value = '35 Pages';
@@ -6310,6 +6337,8 @@ function adminOpenAddInterviewPdfModal() {
 }
 
 function adminSaveInterviewPdfModal() {
+  const idEl = document.getElementById('pdf-id');
+  const existingId = idEl ? idEl.value.trim() : '';
   const title = document.getElementById('pdf-title').value.trim();
   const cat = document.getElementById('pdf-category').value.trim();
   const pages = document.getElementById('pdf-pages').value.trim();
@@ -6322,7 +6351,26 @@ function adminSaveInterviewPdfModal() {
     return;
   }
 
-  const list = getAdminInterviewPdfs();
+  let list = getAdminInterviewPdfs();
+  if (existingId) {
+    const idx = list.findIndex(p => p.id === existingId);
+    if (idx !== -1) {
+      list[idx] = {
+        ...list[idx],
+        title,
+        category: cat,
+        pages: pages || list[idx].pages,
+        size: size || list[idx].size,
+        fileName: fname || list[idx].fileName,
+        description: desc || list[idx].description
+      };
+      saveAdminInterviewPdfs(list);
+      closeModal('modal-add-interview-pdf');
+      toast('Interview PDF handbook updated!', '#16a34a');
+      return;
+    }
+  }
+
   list.push({
     id: 'pdf-' + Date.now(),
     title: title,
@@ -6346,7 +6394,31 @@ function adminDeleteInterviewPdf(pdfId) {
   toast('PDF handbook removed', '#dc2626');
 }
 
+function openEditCommonQuestionModal(qId) {
+  const list = getAdminCommonQuestions();
+  const q = list.find(item => item.id === qId);
+  if (!q) return;
+  const titleEl = document.getElementById('modal-title-add-common-sponsorship-question');
+  if (titleEl) titleEl.textContent = 'Question Details & Editor';
+  const idEl = document.getElementById('csq-id');
+  if (idEl) idEl.value = q.id;
+  const btnEl = document.getElementById('btn-save-common-question');
+  if (btnEl) btnEl.textContent = 'Update Common Question';
+  document.getElementById('csq-category').value = q.category || 'Ship Stability & Buoyancy';
+  document.getElementById('csq-companies').value = q.companies || '';
+  document.getElementById('csq-question').value = q.question || '';
+  document.getElementById('csq-formula').value = q.formula || '';
+  document.getElementById('csq-priority').value = q.priority || 'Universal Must-Know';
+  openModal('modal-add-common-sponsorship-question');
+}
+
 function adminOpenAddCommonQuestionModal() {
+  const titleEl = document.getElementById('modal-title-add-common-sponsorship-question');
+  if (titleEl) titleEl.textContent = 'Add Common Sponsorship Question';
+  const idEl = document.getElementById('csq-id');
+  if (idEl) idEl.value = '';
+  const btnEl = document.getElementById('btn-save-common-question');
+  if (btnEl) btnEl.textContent = 'Save Common Question';
   document.getElementById('csq-category').value = 'Ship Stability & Buoyancy';
   document.getElementById('csq-companies').value = 'Maersk · Anglo-Eastern · Synergy';
   document.getElementById('csq-question').value = '';
@@ -6356,6 +6428,8 @@ function adminOpenAddCommonQuestionModal() {
 }
 
 function adminSaveCommonQuestionModal() {
+  const idEl = document.getElementById('csq-id');
+  const existingId = idEl ? idEl.value.trim() : '';
   const cat = document.getElementById('csq-category').value;
   const comps = document.getElementById('csq-companies').value.trim() || 'All Shipping Companies';
   const q = document.getElementById('csq-question').value.trim();
@@ -6367,7 +6441,25 @@ function adminSaveCommonQuestionModal() {
     return;
   }
 
-  const list = getAdminCommonQuestions();
+  let list = getAdminCommonQuestions();
+  if (existingId) {
+    const idx = list.findIndex(item => item.id === existingId);
+    if (idx !== -1) {
+      list[idx] = {
+        ...list[idx],
+        category: cat,
+        companies: comps,
+        question: q,
+        formula: formula || list[idx].formula,
+        priority: pri
+      };
+      saveAdminCommonQuestions(list);
+      closeModal('modal-add-common-sponsorship-question');
+      toast('Common sponsorship question updated!', '#16a34a');
+      return;
+    }
+  }
+
   list.push({
     id: 'csq-' + Date.now(),
     category: cat,
@@ -6398,117 +6490,221 @@ function renderAdminSponsorshipCompanies() {
   const pdfs = getAdminInterviewPdfs();
   const questions = getAdminCommonQuestions();
 
+  const getQuestionIcon = (cat) => {
+    if (!cat) return 'quiz';
+    if (cat.includes('Stability') || cat.includes('Buoyancy')) return 'waves';
+    if (cat.includes('Physics') || cat.includes('Hydrostatics')) return 'science';
+    if (cat.includes('Navigation') || cat.includes('Aptitude')) return 'explore';
+    if (cat.includes('Tonnage') || cat.includes('Knowledge')) return 'inventory_2';
+    if (cat.includes('Mechanical') || cat.includes('Fluid')) return 'precision_manufacturing';
+    return 'quiz';
+  };
+
+  const getPdfIcon = (cat) => {
+    if (!cat) return 'menu_book';
+    if (cat.includes('Navigation') || cat.includes('COLREGs') || cat.includes('Seamanship')) return 'navigation';
+    if (cat.includes('HR') || cat.includes('Behavioral')) return 'groups';
+    if (cat.includes('Mariner') || cat.includes('Engineer')) return 'military_tech';
+    if (cat.includes('Transcript') || cat.includes('Company')) return 'directions_boat';
+    return 'menu_book';
+  };
+
   container.innerHTML = `
-    <!-- Section 1: Interview Question PDFs -->
-    <div style="margin-bottom:20px;padding:16px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;border-bottom:1px solid #e2e8f0;padding-bottom:8px;">
-        <div style="font-weight:700;color:#0B2345;font-size:13px;display:flex;align-items:center;gap:6px;">
-          <span class="material-symbols-outlined" style="font-size:18px;color:#0f766e;">picture_as_pdf</span>
-          Common Interview Questions (PDF Handbooks)
-          <span class="badge badge-teal" style="font-size:10px;">${pdfs.length} Handbooks</span>
+    <!-- Section 1: Common Interview Questions (PDF Handbooks) -->
+    <div style="margin-bottom:28px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+        <div>
+          <h4 style="font-family:'Oswald';font-weight:700;color:#0B2345;font-size:17px;display:flex;align-items:center;gap:8px;letter-spacing:0.3px;">
+            <span class="material-symbols-outlined" style="font-size:20px;color:#0f766e;">picture_as_pdf</span>
+            Common Interview Questions (PDF Handbooks)
+            <span class="badge" style="background:#e0f2fe;color:#0369a1;font-size:11px;font-weight:700;">${pdfs.length} Handbooks</span>
+          </h4>
+          <p style="font-size:12px;color:#64748b;margin-top:2px;">
+            Official downloadable entrance &amp; viva question bank compilations distributed to cadets.
+          </p>
         </div>
-        <button class="btn btn-outline btn-xs" onclick="adminOpenAddInterviewPdfModal()">
-          <span class="material-symbols-outlined" style="font-size:13px;">add</span> Add PDF
+        <button class="btn btn-outline btn-sm" onclick="adminOpenAddInterviewPdfModal()" style="font-size:12px;">
+          <span class="material-symbols-outlined" style="font-size:15px;color:#0f766e;">add</span> Add PDF Handbook
         </button>
       </div>
 
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px;">
-        ${pdfs.map(p => `
-          <div style="background:#fff;padding:10px 12px;border-radius:8px;border:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
-            <div>
-              <div style="font-weight:700;font-size:12px;color:#0B2345;">${p.title}</div>
-              <div style="font-size:11px;color:#64748b;margin-top:2px;">${p.category} · ${p.pages} (${p.size})</div>
-              <div style="font-size:10px;color:#0f766e;font-weight:600;margin-top:2px;">${p.fileName}</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;">
+        ${pdfs.map((p, idx) => `
+          <div class="card" style="border:1.5px solid #e2e8f0;border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 2px 8px rgba(11,35,69,0.04);transition:all 0.2s;" onmouseenter="this.style.boxShadow='0 8px 20px rgba(11,35,69,0.1)'" onmouseleave="this.style.boxShadow='0 2px 8px rgba(11,35,69,0.04)'">
+            <div style="height:4px;background:linear-gradient(90deg, #0B2345, #C89B3C);"></div>
+            <div style="padding:18px;display:flex;flex-direction:column;justify-content:space-between;height:100%;">
+              <div>
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;">
+                  <div style="width:40px;height:40px;border-radius:10px;background:rgba(11,35,69,0.08);display:flex;align-items:center;justify-content:center;">
+                    <span class="material-symbols-outlined" style="color:#0B2345;font-size:22px;">${getPdfIcon(p.category)}</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <span class="badge" style="background:#f1f5f9;color:#475569;font-size:10px;font-weight:700;">Handbook 0${idx + 1}</span>
+                    <button onclick="adminDeleteInterviewPdf('${p.id}')" title="Delete PDF Handbook" style="border:none;background:none;cursor:pointer;color:#94a3b8;padding:2px 4px;border-radius:6px;" onmouseenter="this.style.color='#dc2626'" onmouseleave="this.style.color='#94a3b8'">
+                      <span class="material-symbols-outlined" style="font-size:18px;">delete</span>
+                    </button>
+                  </div>
+                </div>
+
+                <h4 style="font-family:'Oswald';font-size:17px;font-weight:700;color:#0B2345;line-height:1.2;margin-bottom:6px;">${p.title}</h4>
+                <div style="font-size:12px;color:#64748b;margin-bottom:10px;display:flex;align-items:center;gap:4px;">
+                  <span class="material-symbols-outlined" style="font-size:14px;color:#C89B3C;">folder_open</span>
+                  Domain: <strong style="color:#0B2345;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:210px;" title="${p.category}">${p.category}</strong>
+                </div>
+
+                <p style="font-size:12.5px;color:#334155;line-height:1.5;margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;min-height:56px;" title="${(p.description || '').replace(/"/g, '&quot;')}">
+                  ${p.description || 'Comprehensive verified question bank with past oral interview transcripts.'}
+                </p>
+
+                <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:16px;">
+                  <span style="font-size:10px;background:#e0f2fe;color:#0369a1;padding:3px 8px;border-radius:6px;font-weight:600;">📄 ${p.pages || '30 Pages'}</span>
+                  <span style="font-size:10px;background:#dcfce7;color:#15803d;padding:3px 8px;border-radius:6px;font-weight:600;">💾 ${p.size || '3.5 MB'}</span>
+                  <span style="font-size:10px;background:#ede9fe;color:#6d28d9;padding:3px 8px;border-radius:6px;font-weight:600;">${p.year || '2025–2026 Edition'}</span>
+                </div>
+              </div>
+
+              <div>
+                <button onclick="openEditInterviewPdfModal('${p.id}')" class="btn btn-navy" style="width:100%;justify-content:center;padding:9px 14px;border-radius:8px;font-family:'Oswald';letter-spacing:0.5px;font-size:13px;">
+                  VIEW DETAILS
+                </button>
+              </div>
             </div>
-            <button onclick="adminDeleteInterviewPdf('${p.id}')" class="btn btn-outline btn-xs" style="color:#dc2626;border-color:#fecaca;" title="Delete PDF">
-              <span class="material-symbols-outlined" style="font-size:14px;">delete</span>
-            </button>
           </div>
         `).join('')}
       </div>
     </div>
 
     <!-- Section 2: Common Sponsorship Questions Across Every Company -->
-    <div style="margin-bottom:20px;padding:16px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;border-bottom:1px solid #e2e8f0;padding-bottom:8px;">
-        <div style="font-weight:700;color:#0B2345;font-size:13px;display:flex;align-items:center;gap:6px;">
-          <span class="material-symbols-outlined" style="font-size:18px;color:#d97706;">fact_check</span>
-          Common Sponsorship Questions in Every Company
-          <span class="badge badge-yellow" style="font-size:10px;">${questions.length} Universal Questions</span>
+    <div style="margin-bottom:28px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+        <div>
+          <h4 style="font-family:'Oswald';font-weight:700;color:#0B2345;font-size:17px;display:flex;align-items:center;gap:8px;letter-spacing:0.3px;">
+            <span class="material-symbols-outlined" style="font-size:20px;color:#d97706;">fact_check</span>
+            Common Sponsorship Questions in Every Company
+            <span class="badge" style="background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;">${questions.length} Universal Questions</span>
+          </h4>
+          <p style="font-size:12px;color:#64748b;margin-top:2px;">
+            Universal oral &amp; technical questions asked by major shipping lines. Cadets must master these core principles.
+          </p>
         </div>
-        <button class="btn btn-outline btn-xs" onclick="adminOpenAddCommonQuestionModal()">
-          <span class="material-symbols-outlined" style="font-size:13px;">add</span> Add Question
+        <button class="btn btn-gold btn-sm" onclick="adminOpenAddCommonQuestionModal()" style="font-size:12px;">
+          <span class="material-symbols-outlined" style="font-size:15px;">add</span> Add Question
         </button>
       </div>
 
-      <div style="display:flex;flex-direction:column;gap:8px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;">
         ${questions.map((q, idx) => `
-          <div style="background:#fff;padding:10px 12px;border-radius:8px;border:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
-            <div style="flex:1;">
-              <div style="display:flex;gap:6px;align-items:center;margin-bottom:3px;flex-wrap:wrap;">
-                <span class="badge" style="background:#f1f5f9;font-size:10px;">Q${idx + 1} · ${q.category}</span>
-                <span class="badge badge-yellow" style="font-size:10px;">${q.companies}</span>
+          <div class="card" style="border:1.5px solid #e2e8f0;border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 2px 8px rgba(11,35,69,0.04);transition:all 0.2s;" onmouseenter="this.style.boxShadow='0 8px 20px rgba(11,35,69,0.1)'" onmouseleave="this.style.boxShadow='0 2px 8px rgba(11,35,69,0.04)'">
+            <div style="height:4px;background:linear-gradient(90deg, #0B2345, #C89B3C);"></div>
+            <div style="padding:18px;display:flex;flex-direction:column;justify-content:space-between;height:100%;">
+              <div>
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;">
+                  <div style="width:40px;height:40px;border-radius:10px;background:rgba(11,35,69,0.08);display:flex;align-items:center;justify-content:center;">
+                    <span class="material-symbols-outlined" style="color:#0B2345;font-size:22px;">${getQuestionIcon(q.category)}</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <span class="badge" style="background:#f1f5f9;color:#475569;font-size:10px;font-weight:700;">Question 0${idx + 1}</span>
+                    <button onclick="adminDeleteCommonQuestion('${q.id}')" title="Delete Question" style="border:none;background:none;cursor:pointer;color:#94a3b8;padding:2px 4px;border-radius:6px;" onmouseenter="this.style.color='#dc2626'" onmouseleave="this.style.color='#94a3b8'">
+                      <span class="material-symbols-outlined" style="font-size:18px;">delete</span>
+                    </button>
+                  </div>
+                </div>
+
+                <h4 style="font-family:'Oswald';font-size:17px;font-weight:700;color:#0B2345;line-height:1.2;margin-bottom:6px;">${q.category}</h4>
+                <div style="font-size:12px;color:#64748b;margin-bottom:10px;display:flex;align-items:center;gap:4px;">
+                  <span class="material-symbols-outlined" style="font-size:14px;color:#C89B3C;">apartment</span>
+                  Tested by: <strong style="color:#0B2345;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:210px;" title="${q.companies}">${q.companies}</strong>
+                </div>
+
+                <p style="font-size:12.5px;color:#334155;line-height:1.5;margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;min-height:56px;" title="${(q.question || '').replace(/"/g, '&quot;')}">
+                  ${q.question}
+                </p>
+
+                <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:16px;">
+                  <span style="font-size:10px;background:#fef3c7;color:#92400e;padding:3px 8px;border-radius:6px;font-weight:600;">⭐ ${q.priority || 'Universal Must-Know'}</span>
+                  <span style="font-size:10px;background:#e0f2fe;color:#0369a1;padding:3px 8px;border-radius:6px;font-weight:600;">💡 Key Principle</span>
+                  <span style="font-size:10px;background:#ede9fe;color:#6d28d9;padding:3px 8px;border-radius:6px;font-weight:600;">Universal</span>
+                </div>
               </div>
-              <div style="font-size:12px;font-weight:600;color:#0B2345;">${q.question}</div>
-              <div style="font-size:11px;color:#64748b;margin-top:2px;"><strong>Principle:</strong> ${q.formula}</div>
+
+              <div>
+                <button onclick="openEditCommonQuestionModal('${q.id}')" class="btn btn-navy" style="width:100%;justify-content:center;padding:9px 14px;border-radius:8px;font-family:'Oswald';letter-spacing:0.5px;font-size:13px;">
+                  VIEW DETAILS
+                </button>
+              </div>
             </div>
-            <button onclick="adminDeleteCommonQuestion('${q.id}')" class="btn btn-outline btn-xs" style="color:#dc2626;border-color:#fecaca;" title="Delete Question">
-              <span class="material-symbols-outlined" style="font-size:14px;">delete</span>
-            </button>
           </div>
         `).join('')}
       </div>
     </div>
 
     <!-- Section 3: Recognized Shipping Companies & Past Question Papers -->
-    <div style="margin-bottom:10px;font-weight:700;color:#0B2345;font-size:13px;display:flex;align-items:center;gap:6px;">
-      <span class="material-symbols-outlined" style="font-size:18px;color:#C89B3C;">directions_boat</span>
-      Recognized Shipping Companies (Fleet Size, History &amp; Past Papers)
-      <span class="badge badge-green" style="font-size:10px;">${companies.length} Lines</span>
-    </div>
+    <div style="margin-bottom:10px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
+        <div>
+          <h4 style="font-family:'Oswald';font-weight:700;color:#0B2345;font-size:17px;display:flex;align-items:center;gap:8px;letter-spacing:0.3px;">
+            <span class="material-symbols-outlined" style="font-size:20px;color:#C89B3C;">directions_boat</span>
+            Recognized Shipping Companies (Fleet Size, History &amp; Past Papers)
+            <span class="badge badge-green" style="font-size:11px;font-weight:700;">${companies.length} Lines</span>
+          </h4>
+          <p style="font-size:12px;color:#64748b;margin-top:2px;">
+            Manage global shipping lines, operational fleet statistics, company histories, and past entrance question papers.
+          </p>
+        </div>
+        <button class="btn btn-gold btn-sm" onclick="openAddCompanyModal()" style="font-size:12px;">
+          <span class="material-symbols-outlined" style="font-size:15px;">add_business</span> Add Shipping Company
+        </button>
+      </div>
 
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;">
-      ${companies.map(c => {
-        const paperCount = c.pastPapers ? c.pastPapers.length : 0;
-        return `
-          <div style="border:1.5px solid #e2e8f0;border-radius:12px;background:#fff;padding:16px 18px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 1px 3px rgba(0,0,0,0.02);">
-            <div>
-              <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;">
+        ${companies.map(c => {
+          const paperCount = c.pastPapers ? c.pastPapers.length : 0;
+          return `
+            <div class="card" style="border:1.5px solid #e2e8f0;border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 2px 8px rgba(11,35,69,0.04);transition:all 0.2s;" onmouseenter="this.style.boxShadow='0 8px 20px rgba(11,35,69,0.1)'" onmouseleave="this.style.boxShadow='0 2px 8px rgba(11,35,69,0.04)'">
+              <div style="height:4px;background:linear-gradient(90deg, #0B2345, #C89B3C);"></div>
+              <div style="padding:18px;display:flex;flex-direction:column;justify-content:space-between;height:100%;">
                 <div>
-                  <div style="font-family:'Oswald';font-size:16px;font-weight:600;color:#0B2345;">${c.name}</div>
-                  <div style="font-size:12px;color:#64748b;margin-top:2px;">${c.headquarters} · Est. ${c.established || 'N/A'}</div>
-                </div>
-                <span class="badge badge-green" style="font-size:10px;">${c.fleetCount}</span>
-              </div>
-              <div style="font-size:12px;color:#475569;line-height:1.45;margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">
-                ${c.history}
-              </div>
-              <div style="display:flex;gap:8px;flex-wrap:wrap;font-size:11px;color:#0B2345;margin-bottom:12px;">
-                <span style="background:#f1f5f9;padding:3px 8px;border-radius:6px;font-weight:600;">
-                  📝 ${paperCount} Old Question Paper${paperCount===1?'':'s'}
-                </span>
-                <span style="background:#fef3c7;color:#92400e;padding:3px 8px;border-radius:6px;font-weight:600;">
-                  ${c.status || 'Recruiting'}
-                </span>
-              </div>
-            </div>
+                  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;">
+                    <div style="width:40px;height:40px;border-radius:10px;background:rgba(11,35,69,0.08);display:flex;align-items:center;justify-content:center;">
+                      <span class="material-symbols-outlined" style="color:#0B2345;font-size:22px;">directions_boat</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                      <span class="badge badge-green" style="font-size:10px;font-weight:700;">${c.fleetCount || 'Fleet'}</span>
+                      <button onclick="adminDeleteCompany('${c.id}')" title="Delete Company" style="border:none;background:none;cursor:pointer;color:#94a3b8;padding:2px 4px;border-radius:6px;" onmouseenter="this.style.color='#dc2626'" onmouseleave="this.style.color='#94a3b8'">
+                        <span class="material-symbols-outlined" style="font-size:18px;">delete</span>
+                      </button>
+                    </div>
+                  </div>
 
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;border-top:1px solid #f1f5f9;padding-top:12px;">
-              <div style="display:flex;gap:6px;">
-                <button onclick="openEditCompanyModal('${c.id}')" class="btn btn-outline btn-xs" style="font-size:11px;padding:4px 10px;">
-                  <span class="material-symbols-outlined" style="font-size:13px;">edit</span> Edit
-                </button>
-                <button onclick="openAddPaperModal('${c.id}')" class="btn btn-outline btn-xs" style="font-size:11px;padding:4px 10px;">
-                  <span class="material-symbols-outlined" style="font-size:13px;">add</span> Add Paper
-                </button>
+                  <h4 style="font-family:'Oswald';font-size:17px;font-weight:700;color:#0B2345;line-height:1.2;margin-bottom:6px;">${c.name}</h4>
+                  <div style="font-size:12px;color:#64748b;margin-bottom:10px;display:flex;align-items:center;gap:4px;">
+                    <span class="material-symbols-outlined" style="font-size:14px;color:#C89B3C;">location_on</span>
+                    HQ: <strong style="color:#0B2345;">${c.headquarters}</strong> · Est. ${c.established || 'N/A'}
+                  </div>
+
+                  <p style="font-size:12.5px;color:#334155;line-height:1.5;margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;min-height:56px;">
+                    ${c.history}
+                  </p>
+
+                  <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:16px;">
+                    <span style="font-size:10px;background:#f1f5f9;color:#0B2345;padding:3px 8px;border-radius:6px;font-weight:600;">📝 ${paperCount} Past Papers</span>
+                    <span style="font-size:10px;background:#fef3c7;color:#92400e;padding:3px 8px;border-radius:6px;font-weight:600;">${c.status || 'Recruiting'}</span>
+                  </div>
+                </div>
+
+                <div style="display:flex;gap:8px;">
+                  <button onclick="openEditCompanyModal('${c.id}')" class="btn btn-navy" style="flex:1;justify-content:center;padding:9px 10px;border-radius:8px;font-family:'Oswald';letter-spacing:0.5px;font-size:13px;">
+                    VIEW DETAILS
+                  </button>
+                  <button onclick="openAddPaperModal('${c.id}')" class="btn btn-outline" style="justify-content:center;padding:9px 12px;border-radius:8px;font-family:'Oswald';letter-spacing:0.5px;font-size:12px;" title="Add Past Paper">
+                    + PAPER
+                  </button>
+                </div>
               </div>
-              <button onclick="adminDeleteCompany('${c.id}')" class="btn btn-xs" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;font-size:11px;padding:4px 8px;" title="Delete Company">
-                <span class="material-symbols-outlined" style="font-size:13px;">delete</span>
-              </button>
             </div>
-          </div>
-        `;
-      }).join('')}
+          `;
+        }).join('')}
+      </div>
     </div>
   `;
 }
