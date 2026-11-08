@@ -866,18 +866,6 @@
             <div class="page-subtitle">Manage all enrolled students</div>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-            <!-- 3 Options Policy Control on Students Tab -->
-            <div style="display:flex;align-items:center;gap:8px;background:#f8fafc;padding:4px 10px;border:1.5px solid #cbd5e1;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,0.04);" title="Global policy for cadets who are not enrolled in Sponsorship Prep">
-              <span style="font-size:11px;font-weight:700;color:#0B2345;text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:4px;">
-                <span class="material-symbols-outlined" style="font-size:16px;color:#C89B3C;">visibility</span>
-                Non-Enrolled Policy:
-              </span>
-              <select id="students-tab-course-policy" class="form-select" style="font-size:11px;padding:3px 8px;height:30px;font-weight:700;color:#0B2345;border-radius:6px;border:1px solid #cbd5e1;background:#fff;cursor:pointer;" onchange="adminUpdateCoursePolicy('sponsorship-prep', this.value)">
-                <option value="locked">🔒 1. Show Locked (Marketing CTA)</option>
-                <option value="hidden">👁️ 2. Hide from Non-Enrolled</option>
-                <option value="open">🔓 3. Open / Unlocked for All</option>
-              </select>
-            </div>
             <button class="btn btn-outline btn-sm" id="btn-sync-students" onclick="syncStudentsFromSupabase(true)" title="Fetch latest students directly from Supabase">
               <span class="material-symbols-outlined" style="font-size:14px;">sync</span> Sync Supabase
             </button>
@@ -4626,8 +4614,6 @@ function getCoursePolicy(courseId) {
 
 function syncPolicyUI() {
   const policy = getCoursePolicy('sponsorship-prep');
-  const stSel = document.getElementById('students-tab-course-policy');
-  if (stSel) stSel.value = policy;
   const mesSel = document.getElementById('mes-course-policy');
   if (mesSel) mesSel.value = policy;
   const mesBadge = document.getElementById('mes-policy-badge');
