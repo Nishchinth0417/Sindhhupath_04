@@ -4600,11 +4600,13 @@ const ADMIN_MOCK_TESTS = {
 
 // ── LEVEL 1: RENDER COURSES CATALOG ──
 function renderCourses() {
+  const mainView = document.getElementById('admin-courses-main-view');
+  const hubView = document.getElementById('admin-course-hub-view');
+  const subjView = document.getElementById('admin-subject-view');
+  if (mainView) mainView.style.display = 'block';
+  if (hubView) hubView.style.display = 'none';
+  if (subjView) subjView.style.display = 'none';
   renderAdminCoursesMainView();
-  if (currentAdminCourseId === 'sponsorship-prep') {
-    renderAdminSponsorshipCompanies();
-    renderAdminVivaStatus();
-  }
 }
 
 
