@@ -3070,6 +3070,30 @@ async function handleAdminLogin(e) {
       return;
     }
 
+    // Strict Admin Role Verification
+    let userRole = data.session.user?.user_metadata?.role;
+    try {
+      const { data: profile } = await sbClient
+        .from('profiles')
+        .select('role')
+        .eq('id', data.session.user.id)
+        .single();
+      if (profile?.role) userRole = profile.role;
+    } catch(err) {
+      console.warn('Profile role lookup error:', err);
+    }
+
+    if (userRole !== 'admin') {
+      await sbClient.auth.signOut();
+      showAdminAuthMsg('Access Denied: Administrator role required. Your account does not have admin permissions.', 'error');
+      if (passwordInput) { passwordInput.value = ''; passwordInput.focus(); }
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-symbols-outlined text-base">login</span><span>SIGN IN TO PORTAL</span>';
+      }
+      return;
+    }
+
     showAdminAuthMsg('✓ Access Granted! Entering portal...', 'success');
     showApp(data.session.user);
     toast('✓ Welcome to Admin Portal', '#16a34a');
@@ -3677,26 +3701,37 @@ async function saveStudent() {
     course: (activeCourses.length > 0 ? activeCourses : ['IMU-CET']).join(', ')
   };
 
-  // Provision credentials in shared sindhupath_users store for login at login.html
-  let allUsers = [];
-  try { allUsers = JSON.parse(localStorage.getItem('sindhupath_users') || '[]'); } catch(e) { allUsers = []; }
-  const existingIdx = allUsers.findIndex(u => u.email.toLowerCase() === email);
-  const userRecord = {
-    id: 'user_' + Date.now(),
-    email,
-    password,
-    role: 'cadet',
-    name: newS.name,
-    roll_number: newS.roll,
-    batch: newS.batch,
-    courseAccess: newS.courseAccess,
-    must_change_password: true,
-    created_at: new Date().toISOString()
-  };
-  if (existingIdx >= 0) allUsers[existingIdx] = userRecord;
-  else allUsers.push(userRecord);
-  try { localStorage.setItem('sindhupath_users', JSON.stringify(allUsers)); } catch(e) {}
+  // 1. Register cadet in Supabase Auth via isolated provisioning client (without overwriting admin session)
+  let authUserId = null;
+  if (sbAuthProvisionClient) {
+    try {
+      const { data: authData, error: authErr } = await sbAuthProvisionClient.auth.signUp({
+        email: newS.email,
+        password: password,
+        options: {
+          data: {
+            role: 'student',
+            full_name: newS.name,
+            roll_number: newS.roll,
+            batch: newS.batch
+          }
+        }
+      });
+      if (authErr) {
+        console.warn('Cadet Supabase Auth notice:', authErr.message);
+      } else if (authData?.user) {
+        authUserId = authData.user.id;
+        console.log('Cadet created in Supabase Auth:', authData.user);
+      }
+    } catch(err) {
+      console.warn('Auth provisioning exception:', err);
+    }
+  }
 
+  // Remove legacy plaintext credentials store
+  localStorage.removeItem('sindhupath_users');
+
+  newS.user_id = authUserId;
   appStudents.unshift(newS);
   try {
     localStorage.setItem('sp_students', JSON.stringify(appStudents));
@@ -3705,8 +3740,10 @@ async function saveStudent() {
 
   if (sbClient) {
     sbClient.from('students').insert([{
+      user_id: authUserId,
       name: newS.name,
       roll_number: newS.roll,
+      roll: newS.roll,
       email: newS.email,
       batch: newS.batch,
       course: newS.course,
@@ -4421,31 +4458,8 @@ async function saveFaculty() {
     status:      document.getElementById('f-status').value,
   };
 
-  // 1. Provision credentials in shared sindhupath_users store for immediate login at login.html
-  let allUsers = [];
-  try {
-    allUsers = JSON.parse(localStorage.getItem('sindhupath_users') || '[]');
-  } catch(e) { allUsers = []; }
-
-  const existingIdx = allUsers.findIndex(u => u.email.toLowerCase() === email);
-  const userRecord = {
-    id: 'fac_' + Date.now(),
-    email,
-    password,
-    role: 'faculty',
-    name: newF.name,
-    designation: newF.designation,
-    subject: newF.subject,
-    must_change_password: true,
-    created_at: new Date().toISOString()
-  };
-
-  if (existingIdx >= 0) {
-    allUsers[existingIdx] = userRecord;
-  } else {
-    allUsers.push(userRecord);
-  }
-  localStorage.setItem('sindhupath_users', JSON.stringify(allUsers));
+  // Remove legacy plaintext credential store
+  localStorage.removeItem('sindhupath_users');
 
   // 2. Persist faculty in saved roster
   let savedFaculty = [];
@@ -7834,12 +7848,32 @@ window.addEventListener('DOMContentLoaded', async () => {
   localStorage.removeItem('sp_cadet_email');
   localStorage.removeItem('sindhupath_logged_email');
 
-  // Verify active Supabase auth session
+  // Clean legacy insecure stores
+  localStorage.removeItem('sindhupath_users');
+  localStorage.removeItem('sindhupath_active_user');
+
+  // Verify active Supabase auth session & verify admin role
   if (sbClient) {
     try {
       const { data: { session }, error } = await sbClient.auth.getSession();
       if (!error && session?.user) {
-        showApp(session.user);
+        let userRole = session.user?.user_metadata?.role;
+        try {
+          const { data: profile } = await sbClient
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .single();
+          if (profile?.role) userRole = profile.role;
+        } catch(err) {}
+
+        if (userRole === 'admin') {
+          showApp(session.user);
+        } else {
+          console.warn('Non-admin user session rejected on admin portal.');
+          await sbClient.auth.signOut();
+          showLogin();
+        }
       } else {
         showLogin();
       }

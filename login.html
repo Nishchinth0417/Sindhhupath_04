@@ -270,10 +270,11 @@
         }
       }
     } catch (err) {
-      console.warn('Role lookup check failed, falling back to admin portal:', err);
+      console.warn('Role lookup check failed:', err);
     }
-    // Default fallback
-    window.location.href = 'admin-portal.html';
+    showStatus('Profile role not configured. Please contact the administrator.', 'error');
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<span class="material-symbols-outlined text-base">login</span><span>LOGIN</span>';
   }
 
   // --- Clean up legacy manual keys on load (no auto-redirect) ---
@@ -281,6 +282,8 @@
     localStorage.removeItem('sp_admin_email');
     localStorage.removeItem('sp_cadet_email');
     localStorage.removeItem('sindhupath_logged_email');
+    localStorage.removeItem('sindhupath_users');
+    localStorage.removeItem('sindhupath_active_user');
   })();
 
   // --- Login Form Submit ---
@@ -310,22 +313,6 @@
       const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
       
       if (error || !data.session) {
-        // Check if user credentials were provisioned by Admin
-        let localUsers = [];
-        try { localUsers = JSON.parse(localStorage.getItem('sindhupath_users') || '[]'); } catch(e) {}
-        const matched = localUsers.find(u => u.email && u.email.toLowerCase() === email && u.password === password);
-
-        if (matched) {
-          localStorage.setItem('sindhupath_active_user', JSON.stringify(matched));
-          showStatus('✓ Credentials verified! Entering Sindhupath portal...', 'success');
-          setTimeout(() => {
-            if (matched.role === 'student') window.location.href = 'student-portal.html';
-            else if (matched.role === 'faculty') window.location.href = 'faculty-portal.html';
-            else window.location.href = 'admin-portal.html';
-          }, 500);
-          return;
-        }
-
         showStatus('Access Denied: ' + (error?.message || 'Invalid email or password.'), 'error');
         document.getElementById('password').value = '';
         document.getElementById('password').focus();

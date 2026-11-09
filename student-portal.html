@@ -7339,42 +7339,31 @@ async function updateNewPasswordSingleScreen(e) {
   }
 
   try {
-    const activeLocal = JSON.parse(localStorage.getItem('sindhupath_active_user') || 'null');
-    const email = document.getElementById('pf-email')?.value || activeLocal?.email || currentStudentEmail;
-
-    // 1. Check & update credentials in shared sindhupath_users store
-    let localUsers = [];
-    try { localUsers = JSON.parse(localStorage.getItem('sindhupath_users') || '[]'); } catch(e) {}
-    const localMatched = localUsers.find(u => u.email && u.email.toLowerCase() === email.toLowerCase());
-
-    if (localMatched) {
-      if (localMatched.password !== curPass) {
-        if (btn) { btn.disabled = false; btn.innerHTML = origHTML; }
-        toast('Current password is incorrect.', 'error');
-        return;
-      }
-      localMatched.password = newPass;
-      localMatched.must_change_password = false;
-      localStorage.setItem('sindhupath_users', JSON.stringify(localUsers));
-      if (activeLocal && activeLocal.email.toLowerCase() === email.toLowerCase()) {
-        activeLocal.password = newPass;
-        activeLocal.must_change_password = false;
-        localStorage.setItem('sindhupath_active_user', JSON.stringify(activeLocal));
-      }
-    }
-
-    // 2. Also update Supabase Auth if session exists
+    // Verify current credentials & update in Supabase Auth
     if (sbClient) {
       try {
         const { data: sessionData } = await sbClient.auth.getSession();
-        if (sessionData?.session) {
-          const { error: signInErr } = await sbClient.auth.signInWithPassword({ email, password: curPass });
-          if (!signInErr) {
-            await sbClient.auth.updateUser({ password: newPass });
-          }
+        if (!sessionData?.session) {
+          if (btn) { btn.disabled = false; btn.innerHTML = origHTML; }
+          toast('Session expired. Please log in again.', 'error');
+          window.location.href = 'login.html';
+          return;
+        }
+        const activeEmail = sessionData.session.user.email;
+        const { error: signInErr } = await sbClient.auth.signInWithPassword({ email: activeEmail, password: curPass });
+        if (signInErr) {
+          if (btn) { btn.disabled = false; btn.innerHTML = origHTML; }
+          toast('Current password is incorrect.', 'error');
+          return;
+        }
+        const { error: updateErr } = await sbClient.auth.updateUser({ password: newPass });
+        if (updateErr) {
+          if (btn) { btn.disabled = false; btn.innerHTML = origHTML; }
+          toast('Password update failed: ' + updateErr.message, 'error');
+          return;
         }
       } catch(sbErr) {
-        console.warn('Supabase password sync note:', sbErr);
+        console.warn('Supabase password update error:', sbErr);
       }
     }
 
@@ -7985,37 +7974,16 @@ async function loadDynamicCoursesAndSubjectsFromSupabase() {
   if (sbClient) {
     try {
       const { data: { session } } = await sbClient.auth.getSession();
-      if (!session) {
-        // Check for active provisioned user session
-        let activeUser = null;
-        try { activeUser = JSON.parse(localStorage.getItem('sindhupath_active_user') || 'null'); } catch(e) {}
-        if (activeUser && activeUser.role === 'student') {
-          currentUserId = activeUser.id || null;
-          currentStudentEmail = activeUser.email || '';
-          activeStudent = {
-            name: activeUser.name,
-            email: activeUser.email,
-            roll: activeUser.roll,
-            course: activeUser.course,
-            batch: activeUser.batch,
-            attendance: activeUser.attendance,
-            fees_status: activeUser.fees_status
-          };
-          if (activeUser.must_change_password) {
-            setTimeout(() => {
-              toast('Welcome Cadet! Please change your initial password in Profile & Security.', '#C89B3C', 6000);
-            }, 1000);
-          }
-        } else {
-          window.location.href = 'login.html';
-          return;
-        }
-      } else {
-        currentUserId = session.user?.id || null;
-        currentStudentEmail = session.user?.email || '';
+      if (!session || !session.user) {
+        window.location.href = 'login.html';
+        return;
       }
+      currentUserId = session.user.id;
+      currentStudentEmail = session.user.email || '';
     } catch(err) {
       console.warn('Session check warning:', err);
+      window.location.href = 'login.html';
+      return;
     }
   }
 
