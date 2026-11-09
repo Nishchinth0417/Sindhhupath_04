@@ -4564,6 +4564,7 @@ async function updateAdmission(id, status) {
 // ─── UNIFIED COURSE & SUBJECT 3-LEVEL DRILLDOWN ENGINE (CLIENT UI FIRST) ───
 
 let currentAdminCourseId = 'imu-cet';
+let currentSponsorshipClassroomTab = 'classwork';
 let currentAdminSubjectKey = 'math';
 let currentAdminSubTab = 'materials';
 
@@ -4997,6 +4998,65 @@ function adminCloseCourseHub() {
   }
 }
 
+
+function adminSetSponsorshipClassroomTab(tabName) {
+  currentSponsorshipClassroomTab = tabName;
+  renderAdminCourseHub();
+}
+
+function adminCopyClassCode() {
+  navigator.clipboard.writeText('SPON-2026').then(() => {
+    toast('✓ Class code copied: SPON-2026', '#16a34a');
+  }).catch(() => {
+    toast('Class code: SPON-2026', '#0B2345');
+  });
+}
+
+function postClassroomAnnouncement() {
+  const input = document.getElementById('stream-announce-input');
+  if (!input || !input.value.trim()) return;
+  const text = input.value.trim();
+  let list = [];
+  try {
+    list = JSON.parse(localStorage.getItem('spon_classroom_announcements') || '[]');
+  } catch(e) {}
+  list.unshift({
+    id: 'ann-' + Date.now(),
+    author: 'Administrator',
+    role: 'Academy Admin',
+    text: text,
+    time: 'Just now'
+  });
+  localStorage.setItem('spon_classroom_announcements', JSON.stringify(list));
+  input.value = '';
+  document.getElementById('stream-announce-actions').style.display = 'none';
+  renderAdminCourseHub();
+  toast('✓ Announcement posted to Sponsorship Prep Stream', '#16a34a');
+}
+
+function getClassroomAnnouncements() {
+  try {
+    const raw = localStorage.getItem('spon_classroom_announcements');
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return [
+    {
+      id: 'ann-default-1',
+      author: 'Capt. R. Sharma',
+      role: 'Faculty Head · Master Mariner',
+      text: 'Welcome cadets to Sponsorship Prep 2026! Please review the Technical Viva & COLREGs Master Question Bank in the Classwork tab before Sunday.',
+      time: '2 hours ago'
+    },
+    {
+      id: 'ann-default-2',
+      author: 'Administrator',
+      role: 'Academy Admin',
+      text: 'Maersk and Anglo-Eastern 2026 Batch sponsorship application transcripts have been updated under Recognized Shipping Companies.',
+      time: 'Yesterday'
+    }
+  ];
+}
+
 function renderAdminCourseHub() {
   const hubView = document.getElementById('admin-course-hub-view');
   if (!hubView) return;
@@ -5005,6 +5065,375 @@ function renderAdminCourseHub() {
   const subjects = ADMIN_SUBJECTS_CATALOG[course.id] || [];
   const isSponsorship = course.id === 'sponsorship-prep';
 
+  // ── GOOGLE CLASSROOM UI FOR SPONSORSHIP PREP ──
+  if (isSponsorship) {
+    const pdfs = getAdminInterviewPdfs();
+    const questions = getAdminCommonQuestions();
+    const companies = getAdminSponsorshipCompanies();
+    const announcements = getClassroomAnnouncements();
+
+    // Filter enrolled cadets in sponsorship prep
+    const enrolledStudents = (appStudents || []).filter(s => {
+      const hasSponAccess = s.courseAccess && s.courseAccess['sponsorship-prep'] === 'unlocked';
+      const hasSponName = (Array.isArray(s.courses) && s.courses.some(c => c.toLowerCase().includes('sponsorship'))) || (s.course && s.course.toLowerCase().includes('sponsorship'));
+      return hasSponAccess || hasSponName;
+    });
+
+    const activeTab = currentSponsorshipClassroomTab || 'classwork';
+
+    hubView.innerHTML = `
+      <!-- Google Classroom Top Navigation Bar -->
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #e2e8f0;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button onclick="adminCloseCourseHub()" style="border:none;background:none;cursor:pointer;color:#0d9488;font-weight:700;display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;font-size:13px;" onmouseenter="this.style.background='#f0fdfa'" onmouseleave="this.style.background='none'">
+            <span class="material-symbols-outlined" style="font-size:18px;">arrow_back</span>
+            Back to Courses
+          </button>
+          <span style="color:#cbd5e1;">|</span>
+          <div style="display:flex;align-items:center;gap:6px;font-family:'Oswald';font-size:18px;font-weight:700;color:#0B2345;letter-spacing:0.5px;">
+            <span class="material-symbols-outlined" style="color:#C89B3C;font-size:22px;">sailing</span>
+            SPONSORSHIP PREP CLASSROOM
+          </div>
+          <span class="badge" style="background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;font-weight:700;font-size:11px;">
+            ${currentActiveCoursesBatch || 'Winter Batch'} Active
+          </span>
+        </div>
+
+        <!-- Google Classroom Tabs: Stream | Classwork | People -->
+        <div style="display:flex;align-items:center;gap:4px;background:#f1f5f9;padding:3px;border-radius:10px;box-shadow:inset 0 1px 3px rgba(0,0,0,0.05);">
+          <button onclick="adminSetSponsorshipClassroomTab('stream')" id="gc-tab-stream" style="border:none;cursor:pointer;padding:7px 18px;border-radius:8px;font-weight:700;font-size:12px;display:flex;align-items:center;gap:6px;transition:all 0.15s;${activeTab === 'stream' ? 'background:#0B2345;color:#fff;box-shadow:0 2px 6px rgba(11,35,69,0.15);' : 'background:transparent;color:#475569;'}">
+            <span class="material-symbols-outlined" style="font-size:16px;${activeTab === 'stream' ? 'color:#C89B3C;' : ''}">forum</span> Stream
+          </button>
+          <button onclick="adminSetSponsorshipClassroomTab('classwork')" id="gc-tab-classwork" style="border:none;cursor:pointer;padding:7px 18px;border-radius:8px;font-weight:700;font-size:12px;display:flex;align-items:center;gap:6px;transition:all 0.15s;${activeTab === 'classwork' ? 'background:#0B2345;color:#fff;box-shadow:0 2px 6px rgba(11,35,69,0.15);' : 'background:transparent;color:#475569;'}">
+            <span class="material-symbols-outlined" style="font-size:16px;${activeTab === 'classwork' ? 'color:#C89B3C;' : ''}">assignment</span> Classwork
+          </button>
+          <button onclick="adminSetSponsorshipClassroomTab('people')" id="gc-tab-people" style="border:none;cursor:pointer;padding:7px 18px;border-radius:8px;font-weight:700;font-size:12px;display:flex;align-items:center;gap:6px;transition:all 0.15s;${activeTab === 'people' ? 'background:#0B2345;color:#fff;box-shadow:0 2px 6px rgba(11,35,69,0.15);' : 'background:transparent;color:#475569;'}">
+            <span class="material-symbols-outlined" style="font-size:16px;${activeTab === 'people' ? 'color:#C89B3C;' : ''}">group</span> People
+          </button>
+        </div>
+      </div>
+
+      <!-- Google Classroom Class Banner -->
+      <div style="background:linear-gradient(135deg, #071830 0%, #0B2345 50%, #163866 100%);border-radius:18px;padding:26px 30px;color:#fff;margin-bottom:22px;position:relative;overflow:hidden;box-shadow:0 8px 24px rgba(11,35,69,0.15);">
+        <div style="position:absolute;right:-15px;bottom:-20px;opacity:0.07;pointer-events:none;">
+          <span class="material-symbols-outlined" style="font-size:190px;">sailing</span>
+        </div>
+        <div style="position:relative;z-index:2;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px;">
+          <div>
+            <div style="display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:20px;background:rgba(200,155,60,0.25);border:1px solid rgba(200,155,60,0.4);color:#F3D279;font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:10px;">
+              <span class="material-symbols-outlined" style="font-size:14px;">school</span> Maritime Specialization
+            </div>
+            <h1 style="font-family:'Oswald';font-size:28px;font-weight:700;letter-spacing:0.5px;margin:0 0 6px 0;color:#fff;">
+              Sponsorship Prep Specialization
+            </h1>
+            <p style="font-size:13px;color:#cbd5e1;margin:0;max-width:700px;line-height:1.5;">
+              All-in-one cadet sponsorship preparation: question bank handbooks, universal oral interview questions, and shipping fleet intelligence.
+            </p>
+          </div>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <a href="https://meet.google.com/new" target="_blank" class="btn" style="background:#C89B3C;color:#0B2345;font-family:'Oswald';font-weight:700;padding:9px 16px;border-radius:8px;display:flex;align-items:center;gap:6px;text-decoration:none;box-shadow:0 2px 8px rgba(200,155,60,0.3);">
+              <span class="material-symbols-outlined" style="font-size:18px;">video_camera_front</span>
+              Join Sunday Mock Viva (Meet)
+            </a>
+            <button onclick="adminCopyClassCode()" class="btn btn-outline" style="border-color:rgba(255,255,255,0.3);color:#fff;padding:9px 14px;border-radius:8px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;" onmouseenter="this.style.background='rgba(255,255,255,0.1)'" onmouseleave="this.style.background='transparent'">
+              <span class="material-symbols-outlined" style="font-size:16px;">content_copy</span>
+              Class Code: <strong style="color:#F3D279;font-family:monospace;">SPON-2026</strong>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 1: STREAM VIEW -->
+      <div id="gc-view-stream" style="${activeTab === 'stream' ? 'display:block;' : 'display:none;'}">
+        <div style="display:grid;grid-template-columns:280px 1fr;gap:20px;align-items:flex-start;">
+          <!-- Left Column: Upcoming & Inventory -->
+          <div>
+            <div style="background:#fff;border:1.5px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 8px rgba(11,35,69,0.03);margin-bottom:16px;">
+              <div style="font-family:'Oswald';font-size:15px;font-weight:700;color:#0B2345;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
+                <span>Upcoming</span>
+                <span class="badge badge-green" style="font-size:10px;">Active</span>
+              </div>
+              <div style="font-size:12px;color:#334155;line-height:1.5;">
+                <div style="font-weight:700;color:#0B2345;">Sunday 1-on-1 Mock Viva</div>
+                <div style="color:#64748b;font-size:11px;margin-top:2px;">Scheduled slots: 10:00 AM – 02:00 PM IST</div>
+                <div style="margin-top:10px;padding:8px 10px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0;font-size:11px;">
+                  <span style="font-weight:600;color:#0B2345;">Panel Head:</span> Capt. R. Sharma &amp; Chief Engr. Nair
+                </div>
+              </div>
+            </div>
+
+            <div style="background:#fff;border:1.5px solid #e2e8f0;border-radius:14px;padding:18px;box-shadow:0 2px 8px rgba(11,35,69,0.03);">
+              <div style="font-family:'Oswald';font-size:15px;font-weight:700;color:#0B2345;margin-bottom:12px;">Class Inventory</div>
+              <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;">
+                <div style="display:flex;justify-content:space-between;"><span style="color:#64748b;">Curriculum Subjects:</span><strong style="color:#0B2345;">${subjects.length} Subjects</strong></div>
+                <div style="display:flex;justify-content:space-between;"><span style="color:#64748b;">PDF Handbooks:</span><strong style="color:#0B2345;">${pdfs.length} Question Banks</strong></div>
+                <div style="display:flex;justify-content:space-between;"><span style="color:#64748b;">Universal Questions:</span><strong style="color:#0B2345;">${questions.length} Questions</strong></div>
+                <div style="display:flex;justify-content:space-between;"><span style="color:#64748b;">Shipping Lines:</span><strong style="color:#0B2345;">${companies.length} Fleets</strong></div>
+                <div style="display:flex;justify-content:space-between;"><span style="color:#64748b;">Enrolled Cadets:</span><strong style="color:#16a34a;">${enrolledStudents.length} Cadets</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Announcements & Sunday Viva Authority -->
+          <div>
+            <!-- Post Announcement Input Box -->
+            <div style="background:#fff;border:1.5px solid #e2e8f0;border-radius:14px;padding:18px 20px;box-shadow:0 2px 8px rgba(11,35,69,0.03);margin-bottom:18px;">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+                <div style="width:36px;height:36px;border-radius:50%;background:#0B2345;color:#C89B3C;font-family:'Oswald';font-weight:700;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;">AD</div>
+                <input type="text" id="stream-announce-input" placeholder="Announce something to your cadets..." style="flex:1;border:1px solid #cbd5e1;border-radius:24px;padding:10px 18px;font-size:13px;outline:none;" onfocus="document.getElementById('stream-announce-actions').style.display='flex'">
+              </div>
+              <div id="stream-announce-actions" style="display:none;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid #f1f5f9;">
+                <div style="font-size:11px;color:#64748b;">Broadcast updates, interview advice, or batch notices</div>
+                <div style="display:flex;gap:8px;">
+                  <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('stream-announce-input').value='';document.getElementById('stream-announce-actions').style.display='none'">Cancel</button>
+                  <button type="button" class="btn btn-gold btn-sm" onclick="postClassroomAnnouncement()">Post Announcement</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sunday Mock Viva Authority Card (Full Controls) -->
+            <div class="card" style="margin-bottom:18px;border:1.5px solid #e2e8f0;background:#fff;box-shadow:0 2px 8px rgba(11,35,69,0.04);">
+              <div class="card-header" style="background:#f8fafc;flex-wrap:wrap;gap:12px;padding:14px 18px;">
+                <div>
+                  <div style="font-family:'Oswald';font-size:16px;font-weight:600;color:#0B2345;display:flex;align-items:center;gap:8px;">
+                    <span class="material-symbols-outlined" style="color:#0f766e;font-size:20px;">record_voice_over</span>
+                    Sunday Mock Viva Authority &amp; Availability Control
+                  </div>
+                  <div style="font-size:12px;color:#64748b;margin-top:2px;">
+                    Manage upcoming Sunday session confirmation, handle pilotage/duty re-schedules, and broadcast notices.
+                  </div>
+                </div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                  <button class="btn btn-sm" style="background:#16a34a;color:#fff;font-size:11px;padding:4px 10px;" onclick="adminSetVivaStatus('confirmed')">
+                    <span class="material-symbols-outlined" style="font-size:14px;">check_circle</span> Confirm Session
+                  </button>
+                  <button class="btn btn-sm" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d;font-size:11px;padding:4px 10px;" onclick="adminSetVivaStatus('pending')">
+                    <span class="material-symbols-outlined" style="font-size:14px;">hourglass_top</span> 48h Notice
+                  </button>
+                  <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;font-size:11px;padding:4px 10px;" onclick="adminPromptCancelViva()">
+                    <span class="material-symbols-outlined" style="font-size:14px;">cancel</span> Postpone
+                  </button>
+                </div>
+              </div>
+              <div style="padding:16px 18px;" id="admin-viva-status-display">
+                <!-- Populated dynamically by renderAdminVivaStatus() -->
+              </div>
+            </div>
+
+            <!-- Announcements Stream Feed -->
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              ${announcements.map(ann => `
+                <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:16px 18px;box-shadow:0 1px 4px rgba(0,0,0,0.02);">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                    <div style="display:flex;align-items:center;gap:10px;">
+                      <div style="width:32px;height:32px;border-radius:50%;background:rgba(11,35,69,0.08);color:#0B2345;font-family:'Oswald';font-weight:700;display:flex;align-items:center;justify-content:center;font-size:12px;">
+                        ${ann.author.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div>
+                        <strong style="color:#0B2345;font-size:13px;">${ann.author}</strong>
+                        <div style="font-size:11px;color:#64748b;">${ann.role}</div>
+                      </div>
+                    </div>
+                    <span style="font-size:11px;color:#94a3b8;">${ann.time}</span>
+                  </div>
+                  <div style="font-size:13px;color:#334155;line-height:1.5;">${ann.text}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: CLASSWORK VIEW -->
+      <div id="gc-view-classwork" style="${activeTab === 'classwork' ? 'display:block;' : 'display:none;'}">
+        <!-- Classwork Header & Action Buttons -->
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;padding:12px 18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;">
+          <div>
+            <div style="font-family:'Oswald';font-size:17px;font-weight:700;color:#0B2345;letter-spacing:0.3px;">
+              Classwork &amp; Question Bank Repositories
+            </div>
+            <div style="font-size:12px;color:#64748b;margin-top:2px;">
+              Manage structured learning topics, curriculum modules, verified PDF handbooks, universal questions, and shipping company files.
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-gold btn-sm" onclick="adminOpenAddInterviewPdfModal()" style="font-size:12px;">
+              <span class="material-symbols-outlined" style="font-size:15px;">picture_as_pdf</span> + Add PDF
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="adminOpenAddCommonQuestionModal()" style="font-size:12px;">
+              <span class="material-symbols-outlined" style="font-size:15px;color:#d97706;">fact_check</span> + Add Question
+            </button>
+            <button class="btn btn-outline btn-sm" onclick="openAddCompanyModal()" style="font-size:12px;">
+              <span class="material-symbols-outlined" style="font-size:15px;color:#C89B3C;">add_business</span> + Add Company
+            </button>
+            <button class="btn btn-navy btn-sm" onclick="openAddSubjectModal('${course.id}')" style="font-size:12px;">
+              <span class="material-symbols-outlined" style="font-size:15px;">add</span> + Add Subject
+            </button>
+          </div>
+        </div>
+
+        <!-- TOPIC 1: Core Curriculum Subjects -->
+        <div style="margin-bottom:30px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;border-bottom:2px solid #0B2345;padding-bottom:8px;">
+            <h3 style="font-family:'Oswald';font-size:19px;font-weight:700;color:#0B2345;display:flex;align-items:center;gap:8px;margin:0;">
+              <span class="material-symbols-outlined" style="color:#C89B3C;font-size:22px;">school</span>
+              Topic 1: Core Curriculum Subjects (${subjects.length})
+            </h3>
+            <span class="badge badge-navy" style="font-size:11px;">Active Modules</span>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;">
+            ${subjects.map((s, idx) => {
+              const matCount = (ADMIN_MOCK_MATERIALS[s.key] || []).length;
+              const classCount = (ADMIN_MOCK_CLASSES[s.key] || []).length;
+              const testCount = (ADMIN_MOCK_TESTS[s.key] || []).length;
+              return `
+                <div class="card" style="border:1.5px solid #e2e8f0;border-radius:14px;overflow:hidden;background:#fff;box-shadow:0 2px 8px rgba(11,35,69,0.04);transition:all 0.2s;" onmouseenter="this.style.boxShadow='0 8px 20px rgba(11,35,69,0.1)'" onmouseleave="this.style.boxShadow='0 2px 8px rgba(11,35,69,0.04)'">
+                  <div style="height:4px;background:linear-gradient(90deg, #0B2345, #C89B3C);"></div>
+                  <div style="padding:18px;display:flex;flex-direction:column;justify-content:space-between;height:100%;">
+                    <div>
+                      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;">
+                        <div style="width:40px;height:40px;border-radius:10px;background:rgba(11,35,69,0.08);display:flex;align-items:center;justify-content:center;">
+                          <span class="material-symbols-outlined" style="color:#0B2345;font-size:22px;">${s.icon}</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                          <span class="badge" style="background:#f1f5f9;color:#475569;font-size:10px;font-weight:700;">Subject 0${idx+1}</span>
+                          <button onclick="openSubjectCardSettings('${course.id}', '${s.key}')" title="Subject & Faculty Settings" style="border:none;background:none;cursor:pointer;color:#64748b;padding:2px 4px;border-radius:6px;" onmouseenter="this.style.color='#0B2345'">
+                            <span class="material-symbols-outlined" style="font-size:18px;">more_vert</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <h4 style="font-family:'Oswald';font-size:17px;font-weight:700;color:#0B2345;line-height:1.2;margin-bottom:6px;">${s.name}</h4>
+                      <div style="font-size:12px;color:#64748b;margin-bottom:12px;display:flex;align-items:center;gap:4px;">
+                        <span class="material-symbols-outlined" style="font-size:14px;color:#C89B3C;">badge</span>
+                        Officer: <strong style="color:#0B2345;">${s.faculty}</strong>
+                      </div>
+
+                      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:16px;">
+                        <span style="font-size:10px;background:#e0f2fe;color:#0369a1;padding:3px 8px;border-radius:6px;font-weight:600;">${matCount} Materials (PDFs)</span>
+                        <span style="font-size:10px;background:#fef3c7;color:#92400e;padding:3px 8px;border-radius:6px;font-weight:600;">${classCount} Live Classes</span>
+                        <span style="font-size:10px;background:#ede9fe;color:#6d28d9;padding:3px 8px;border-radius:6px;font-weight:600;">${testCount} CBT Tests</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <button onclick="adminOpenSubject('${course.id}', '${s.key}')" class="btn btn-navy" style="width:100%;justify-content:center;padding:9px 14px;border-radius:8px;font-family:'Oswald';letter-spacing:0.5px;font-size:13px;">
+                        VIEW DETAILS
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- Populated Topics: PDF Handbooks, Common Questions & Shipping Lines -->
+        <div id="admin-sponsorship-companies-list">
+          <!-- Populated by renderAdminSponsorshipCompanies() -->
+        </div>
+      </div>
+
+      <!-- TAB 3: PEOPLE VIEW (TEACHERS & ENROLLED CADETS) -->
+      <div id="gc-view-people" style="${activeTab === 'people' ? 'display:block;' : 'display:none;'}">
+        <!-- Teachers Section -->
+        <div style="background:#fff;border:1.5px solid #e2e8f0;border-radius:14px;padding:22px 24px;margin-bottom:24px;box-shadow:0 2px 8px rgba(11,35,69,0.03);">
+          <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #0B2345;padding-bottom:10px;margin-bottom:16px;">
+            <h3 style="font-family:'Oswald';font-size:20px;font-weight:700;color:#0B2345;margin:0;display:flex;align-items:center;gap:8px;">
+              <span class="material-symbols-outlined" style="color:#C89B3C;font-size:22px;">badge</span>
+              Teachers &amp; Interview Panel
+            </h3>
+            <span class="badge badge-navy" style="font-size:11px;">3 Assigned Instructors</span>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;">
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;">
+              <div style="width:42px;height:42px;border-radius:50%;background:#0B2345;color:#C89B3C;font-family:'Oswald';font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;">RS</div>
+              <div>
+                <strong style="color:#0B2345;font-size:14px;">Capt. R. Sharma</strong>
+                <div style="font-size:11px;color:#64748b;">Faculty Head · Master Mariner</div>
+                <div style="font-size:11px;color:#0d9488;font-weight:600;margin-top:2px;">sharma.marine@sindhupath.com</div>
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;">
+              <div style="width:42px;height:42px;border-radius:50%;background:#0B2345;color:#C89B3C;font-family:'Oswald';font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;">VN</div>
+              <div>
+                <strong style="color:#0B2345;font-size:14px;">Chief Engr. V. Nair</strong>
+                <div style="font-size:11px;color:#64748b;">Technical Officer · Chief Engineer CoC</div>
+                <div style="font-size:11px;color:#0d9488;font-weight:600;margin-top:2px;">nair.marine@sindhupath.com</div>
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid #e2e8f0;border-radius:10px;background:#f8fafc;">
+              <div style="width:42px;height:42px;border-radius:50%;background:#0B2345;color:#C89B3C;font-family:'Oswald';font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;">AP</div>
+              <div>
+                <strong style="color:#0B2345;font-size:14px;">Capt. Arun Pillai</strong>
+                <div style="font-size:11px;color:#64748b;">Interview Officer · Maritime HR &amp; Personality</div>
+                <div style="font-size:11px;color:#0d9488;font-weight:600;margin-top:2px;">arun.pillai@sindhupath.com</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Enrolled Cadets Section -->
+        <div style="background:#fff;border:1.5px solid #e2e8f0;border-radius:14px;padding:22px 24px;box-shadow:0 2px 8px rgba(11,35,69,0.03);">
+          <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #0B2345;padding-bottom:10px;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+            <div>
+              <h3 style="font-family:'Oswald';font-size:20px;font-weight:700;color:#0B2345;margin:0;display:flex;align-items:center;gap:8px;">
+                <span class="material-symbols-outlined" style="color:#C89B3C;font-size:22px;">school</span>
+                Enrolled Cadets (${enrolledStudents.length})
+              </h3>
+              <div style="font-size:12px;color:#64748b;margin-top:2px;">Cadets with active access to Sponsorship Prep Specialization modules</div>
+            </div>
+            <button class="btn btn-outline btn-sm" onclick="switchTab('students')" style="font-size:12px;">
+              <span class="material-symbols-outlined" style="font-size:14px;">manage_accounts</span> Manage in Students Tab
+            </button>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            ${enrolledStudents.length === 0 ? `
+              <div style="text-align:center;padding:28px;color:#94a3b8;font-size:13px;">
+                No cadets currently enrolled. Assign access via the Students tab.
+              </div>
+            ` : enrolledStudents.map(s => `
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;gap:12px;flex-wrap:wrap;">
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <div style="width:36px;height:36px;border-radius:10px;background:rgba(11,35,69,0.08);color:#0B2345;font-family:'Oswald';font-weight:700;display:flex;align-items:center;justify-content:center;font-size:13px;">
+                    ${(s.name || s.full_name || 'C').slice(0, 2).toUpperCase()}
+                  </div>
+                  <div>
+                    <strong style="color:#0B2345;font-size:13px;">${s.name || s.full_name || 'Cadet'}</strong>
+                    <div style="font-size:11px;color:#64748b;display:flex;align-items:center;gap:8px;margin-top:2px;">
+                      <span style="font-family:monospace;">${s.roll || s.roll_number || '—'}</span>
+                      <span>·</span>
+                      <span>${s.email || ''}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span class="badge badge-navy" style="font-size:10px;">${s.batch || 'Winter Batch'}</span>
+                  <span class="badge badge-green" style="font-size:10px;">Unlocked</span>
+                  <button class="btn btn-outline btn-xs" onclick="openEnrollStudentModal('${s.id}')" title="Configure Enrollment" style="font-size:11px;padding:3px 8px;">
+                    <span class="material-symbols-outlined" style="font-size:12px;color:#C89B3C;">school</span> Manage
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+    `;
+
+    renderAdminSponsorshipCompanies();
+    renderAdminVivaStatus();
+    return;
+  }
+
+  // ── STANDARD VIEW FOR IMU-CET & OTHER COURSES ──
   hubView.innerHTML = `
     <!-- Breadcrumb & Top Bar -->
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #e2e8f0;">
@@ -5028,7 +5457,7 @@ function renderAdminCourseHub() {
       </div>
     </div>
 
-    <!-- Course Hero Banner (Mirrored from Student Portal) -->
+    <!-- Course Hero Banner -->
     <div style="background:linear-gradient(135deg, #071830 0%, #0B2345 50%, #12305e 100%);border-radius:16px;padding:24px 28px;color:#fff;margin-bottom:24px;position:relative;overflow:hidden;box-shadow:0 8px 24px rgba(11,35,69,0.15);">
       <div style="position:absolute;right:-20px;bottom:-20px;opacity:0.06;pointer-events:none;">
         <span class="material-symbols-outlined" style="font-size:180px;">${course.icon}</span>
@@ -5057,7 +5486,7 @@ function renderAdminCourseHub() {
           </div>
           <div>
             <p style="color:#94a3b8;font-size:10px;text-transform:uppercase;font-weight:700;">Curriculum Mode</p>
-            <p style="font-weight:700;color:#38bdf8;font-size:15px;margin-top:2px;">${isSponsorship ? 'Specialization & Question Banks' : '6 Core Modular'}</p>
+            <p style="font-weight:700;color:#38bdf8;font-size:15px;margin-top:2px;">6 Core Modular</p>
           </div>
         </div>
       </div>
@@ -5080,7 +5509,7 @@ function renderAdminCourseHub() {
     </div>
 
     <!-- Subjects Cards Grid -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;${isSponsorship ? 'margin-bottom:28px;' : ''}">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;">
       ${subjects.map((s, idx) => {
         const matCount = (ADMIN_MOCK_MATERIALS[s.key] || []).length;
         const classCount = (ADMIN_MOCK_CLASSES[s.key] || []).length;
@@ -5126,72 +5555,7 @@ function renderAdminCourseHub() {
         `;
       }).join('')}
     </div>
-
-    ${isSponsorship ? `
-    <!-- ════════════════ SPONSORSHIP PREP & QUESTION BANKS AUTHORITY ════════════════ -->
-    <div class="card" style="margin-top:28px;border:1.5px solid #e2e8f0;background:#fff;box-shadow:0 2px 8px rgba(11,35,69,0.04);">
-      <div class="card-header" style="background:#f8fafc;flex-wrap:wrap;gap:12px;padding:16px 20px;">
-        <div>
-          <div style="font-family:'Oswald';font-size:16px;font-weight:600;color:#0B2345;display:flex;align-items:center;gap:8px;">
-            <span class="material-symbols-outlined" style="color:#C89B3C;font-size:20px;">sailing</span>
-            Sponsorship Prep &amp; Question Banks Authority
-          </div>
-          <div style="font-size:12px;color:#64748b;margin-top:3px;">
-            Manage global shipping lines, operational fleet statistics, company histories, and past entrance question papers displayed to cadets.
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn btn-sm btn-outline" onclick="adminOpenAddInterviewPdfModal()" style="font-size:12px;">
-            <span class="material-symbols-outlined" style="font-size:15px;color:#0f766e;">picture_as_pdf</span> ➕ Add Interview PDF
-          </button>
-          <button class="btn btn-sm btn-outline" onclick="adminOpenAddCommonQuestionModal()" style="font-size:12px;">
-            <span class="material-symbols-outlined" style="font-size:15px;color:#d97706;">fact_check</span> ➕ Add Common Question
-          </button>
-          <button class="btn btn-gold btn-sm" onclick="openAddCompanyModal()" style="font-size:12px;">
-            <span class="material-symbols-outlined" style="font-size:15px;">add_business</span> ➕ Add Shipping Company
-          </button>
-        </div>
-      </div>
-      <div style="padding:18px 20px;" id="admin-sponsorship-companies-list">
-        <!-- Populated by renderAdminSponsorshipCompanies() -->
-      </div>
-    </div>
-
-    <!-- Sunday Mock Viva & Interviewer Availability Authority Control -->
-    <div class="card" style="margin-top:28px;border:1.5px solid #e2e8f0;background:#fff;box-shadow:0 2px 8px rgba(11,35,69,0.04);">
-      <div class="card-header" style="background:#f8fafc;flex-wrap:wrap;gap:12px;padding:16px 20px;">
-        <div>
-          <div style="font-family:'Oswald';font-size:16px;font-weight:600;color:#0B2345;display:flex;align-items:center;gap:8px;">
-            <span class="material-symbols-outlined" style="color:#0f766e;font-size:20px;">record_voice_over</span>
-            Sunday Mock Viva &amp; Interviewer Availability Authority
-          </div>
-          <div style="font-size:12px;color:#64748b;margin-top:3px;">
-            Manage the upcoming Sunday 1-on-1 viva session confirmation, handle cancellations if interviewers are called for shipboard/pilotage duties, and broadcast 48-hour prior notices.
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn btn-sm" style="background:#16a34a;color:#fff;" onclick="adminSetVivaStatus('confirmed')">
-            <span class="material-symbols-outlined" style="font-size:15px;">check_circle</span> Confirm Sunday Session
-          </button>
-          <button class="btn btn-sm" style="background:#fef3c7;color:#92400e;border:1px solid #fcd34d;" onclick="adminSetVivaStatus('pending')">
-            <span class="material-symbols-outlined" style="font-size:15px;">hourglass_top</span> Set to Pending (48h Notice)
-          </button>
-          <button class="btn btn-sm" style="background:#fee2e2;color:#991b1b;border:1px solid #fecaca;" onclick="adminPromptCancelViva()">
-            <span class="material-symbols-outlined" style="font-size:15px;">cancel</span> Cancel / Postpone Session
-          </button>
-        </div>
-      </div>
-      <div style="padding:18px 20px;" id="admin-viva-status-display">
-        <!-- Populated by renderAdminVivaStatus() -->
-      </div>
-    </div>
-    ` : ''}
   `;
-
-  if (isSponsorship) {
-    renderAdminSponsorshipCompanies();
-    renderAdminVivaStatus();
-  }
 }
 
 // ── LEVEL 3: RENDER SUBJECT 3-MODULE DRILLDOWN ──
@@ -6728,21 +7092,15 @@ function renderAdminSponsorshipCompanies() {
   };
 
   container.innerHTML = `
-    <!-- Section 1: Common Interview Questions (PDF Handbooks) -->
-    <div style="margin-bottom:28px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
-        <div>
-          <h4 style="font-family:'Oswald';font-weight:700;color:#0B2345;font-size:17px;display:flex;align-items:center;gap:8px;letter-spacing:0.3px;">
-            <span class="material-symbols-outlined" style="font-size:20px;color:#0f766e;">picture_as_pdf</span>
-            Common Interview Questions (PDF Handbooks)
-            <span class="badge" style="background:#e0f2fe;color:#0369a1;font-size:11px;font-weight:700;">${pdfs.length} Handbooks</span>
-          </h4>
-          <p style="font-size:12px;color:#64748b;margin-top:2px;">
-            Official downloadable entrance &amp; viva question bank compilations distributed to cadets.
-          </p>
-        </div>
-        <button class="btn btn-outline btn-sm" onclick="adminOpenAddInterviewPdfModal()" style="font-size:12px;">
-          <span class="material-symbols-outlined" style="font-size:15px;color:#0f766e;">add</span> Add PDF Handbook
+    <!-- TOPIC 2: Common Interview Questions (PDF Handbooks) -->
+    <div style="margin-bottom:30px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;border-bottom:2px solid #0B2345;padding-bottom:8px;">
+        <h3 style="font-family:'Oswald';font-size:19px;font-weight:700;color:#0B2345;display:flex;align-items:center;gap:8px;margin:0;">
+          <span class="material-symbols-outlined" style="color:#0f766e;font-size:22px;">picture_as_pdf</span>
+          Topic 2: Official Question Bank Handbooks (${pdfs.length} PDFs)
+        </h3>
+        <button class="btn btn-outline btn-xs" onclick="adminOpenAddInterviewPdfModal()" style="font-size:11px;">
+          <span class="material-symbols-outlined" style="font-size:14px;color:#0f766e;">add</span> Add PDF Handbook
         </button>
       </div>
 
@@ -6792,21 +7150,15 @@ function renderAdminSponsorshipCompanies() {
       </div>
     </div>
 
-    <!-- Section 2: Common Sponsorship Questions Across Every Company -->
-    <div style="margin-bottom:28px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
-        <div>
-          <h4 style="font-family:'Oswald';font-weight:700;color:#0B2345;font-size:17px;display:flex;align-items:center;gap:8px;letter-spacing:0.3px;">
-            <span class="material-symbols-outlined" style="font-size:20px;color:#d97706;">fact_check</span>
-            Common Sponsorship Questions in Every Company
-            <span class="badge" style="background:#fef3c7;color:#92400e;font-size:11px;font-weight:700;">${questions.length} Universal Questions</span>
-          </h4>
-          <p style="font-size:12px;color:#64748b;margin-top:2px;">
-            Universal oral &amp; technical questions asked by major shipping lines. Cadets must master these core principles.
-          </p>
-        </div>
-        <button class="btn btn-gold btn-sm" onclick="adminOpenAddCommonQuestionModal()" style="font-size:12px;">
-          <span class="material-symbols-outlined" style="font-size:15px;">add</span> Add Question
+    <!-- TOPIC 3: Common Sponsorship Questions Across Every Company -->
+    <div style="margin-bottom:30px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;border-bottom:2px solid #0B2345;padding-bottom:8px;">
+        <h3 style="font-family:'Oswald';font-size:19px;font-weight:700;color:#0B2345;display:flex;align-items:center;gap:8px;margin:0;">
+          <span class="material-symbols-outlined" style="color:#d97706;font-size:22px;">fact_check</span>
+          Topic 3: Universal Oral Interview Questions (${questions.length} Questions)
+        </h3>
+        <button class="btn btn-outline btn-xs" onclick="adminOpenAddCommonQuestionModal()" style="font-size:11px;">
+          <span class="material-symbols-outlined" style="font-size:14px;color:#d97706;">add</span> Add Question
         </button>
       </div>
 
@@ -6856,21 +7208,15 @@ function renderAdminSponsorshipCompanies() {
       </div>
     </div>
 
-    <!-- Section 3: Recognized Shipping Companies & Past Question Papers -->
-    <div style="margin-bottom:10px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px;">
-        <div>
-          <h4 style="font-family:'Oswald';font-weight:700;color:#0B2345;font-size:17px;display:flex;align-items:center;gap:8px;letter-spacing:0.3px;">
-            <span class="material-symbols-outlined" style="font-size:20px;color:#C89B3C;">directions_boat</span>
-            Recognized Shipping Companies (Fleet Size, History &amp; Past Papers)
-            <span class="badge badge-green" style="font-size:11px;font-weight:700;">${companies.length} Lines</span>
-          </h4>
-          <p style="font-size:12px;color:#64748b;margin-top:2px;">
-            Manage global shipping lines, operational fleet statistics, company histories, and past entrance question papers.
-          </p>
-        </div>
-        <button class="btn btn-gold btn-sm" onclick="openAddCompanyModal()" style="font-size:12px;">
-          <span class="material-symbols-outlined" style="font-size:15px;">add_business</span> Add Shipping Company
+    <!-- TOPIC 4: Recognized Shipping Companies & Past Question Papers -->
+    <div style="margin-bottom:20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;border-bottom:2px solid #0B2345;padding-bottom:8px;">
+        <h3 style="font-family:'Oswald';font-size:19px;font-weight:700;color:#0B2345;display:flex;align-items:center;gap:8px;margin:0;">
+          <span class="material-symbols-outlined" style="color:#C89B3C;font-size:22px;">directions_boat</span>
+          Topic 4: Recognized Shipping Lines Intelligence (${companies.length} Lines)
+        </h3>
+        <button class="btn btn-outline btn-xs" onclick="openAddCompanyModal()" style="font-size:11px;">
+          <span class="material-symbols-outlined" style="font-size:14px;color:#C89B3C;">add_business</span> Add Shipping Company
         </button>
       </div>
 
